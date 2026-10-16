@@ -241,6 +241,16 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   6. Completed and checked off Hour 0:30–1:30 milestones in [ml/checklist.md](file:///c:/Users/USER/Documents/GitHub/genium/ml/checklist.md).
 - **Current State**: Vision extraction engine v1 operational, tested, and contract handoff artifact ready for backend integration.
 
+### [Session 4] — 2026-10-16: Google AI Studio Integration, Packaging Cross-Check & E2E Pipeline
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Configured Google AI Studio (`GEMINI_API_KEY`) and upgraded the computer vision extraction engine ([ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py)) to `google-genai` with `gemini-2.5-flash` in native JSON mode with sub-6s latency.
+  2. Implemented strict anti-hallucination guardrails, surface awareness, and character disambiguation (`0` vs `O`, `8` vs `B`) tested across real images in `/ml/images` (`spec1.jpg` to `spec6.jpg`). Verified front-only medicine cartons return `null` and `0.0` confidence for absent flap numbers instead of hallucinating.
+  3. Built [ml/blister_comparator.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/blister_comparator.py) for carton vs. blister packaging cross-examination, verifying batch numbers, expiration dates, and physical tablet appearance (verified detecting debossed `R4` on Risperdal in `spec3.jpg`).
+  4. Built and verified [ml/e2e_scan_pipeline.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/e2e_scan_pipeline.py): wired vision extraction directly into the 11,135 product SQLite database (`backend/dev.db`), successfully verifying the core Genium clone detection (flagged Augmentin box with stolen Isoniazid NAFDAC `A4-100137` as `Verdict: RED`).
+  5. Completed and checked off Hour 1:30–2:45 deliverables in [ml/checklist.md](file:///c:/Users/USER/Documents/GitHub/genium/ml/checklist.md).
+- **Current State**: Computer vision extraction and carton vs. blister packaging comparison engines are fully operational and verified end-to-end against the live NAFDAC SQLite database.
+
 ---
 
 ## 6. Known Gotchas & Constraints
