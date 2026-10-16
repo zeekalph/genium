@@ -1,31 +1,104 @@
 export type LanguageKey = "en" | "yo" | "ha" | "ig" | "pcm";
 
+export interface ExtractedField {
+  value: string | null;
+  confidence: number;
+}
+
+export interface VerificationCheck {
+  id: string;
+  pass: boolean | null;
+  detail: string;
+}
+
+export interface BackendScanResponse {
+  scan_id: string;
+  extracted: {
+    reg_no: ExtractedField;
+    product_name: ExtractedField;
+    manufacturer: ExtractedField;
+    batch_no: ExtractedField;
+    expiry: ExtractedField;
+  };
+  checks: VerificationCheck[];
+  verdict: "green" | "amber" | "red";
+  explanation: string;
+  next_step: string;
+  batch_risk: {
+    batch_no: string;
+    reports: number;
+    score: number;
+  };
+}
+
 export interface ScanResult {
   scan_id: string;
   pack_name: string;
   verdict: "green" | "amber" | "red";
   confidence: number;
   extracted: {
-    reg_no: string;
-    product_name: string;
-    manufacturer: string;
-    batch_no: string;
-    expiry: string;
+    reg_no: string | ExtractedField;
+    product_name: string | ExtractedField;
+    manufacturer: string | ExtractedField;
+    batch_no: string | ExtractedField;
+    expiry: string | ExtractedField;
   };
-  checks: {
-    reg_exists: boolean;
-    reg_matches_prod: boolean;
-    registered_as?: string;
-    dates_valid: boolean;
-    carton_vs_blister: boolean | null;
-    batch_reports_count: number;
-  };
-  explanations: Record<LanguageKey, string>;
+  checks:
+    | {
+        reg_exists: boolean;
+        reg_matches_prod: boolean;
+        registered_as?: string;
+        dates_valid: boolean;
+        carton_vs_blister: boolean | null;
+        batch_reports_count: number;
+      }
+    | VerificationCheck[];
+  explanation?: string;
+  explanations?: Partial<Record<LanguageKey, string>>;
   next_step: string;
   batch_risk: {
     batch_no: string;
     score: number;
-    level: "low" | "medium" | "high";
+    level?: "low" | "medium" | "high";
+    reports?: number;
+  };
+}
+
+export function normalizeBackendScanResponse(res: BackendScanResponse): ScanResult {
+  const regNo = res.extracted.reg_no.value || "Unidentified";
+  const prodName = res.extracted.product_name.value;
+  const packName = prodName ? `${prodName} (${regNo})` : `Packaging (${regNo})`;
+
+  const confValues = [
+    res.extracted.reg_no.confidence,
+    res.extracted.product_name.confidence,
+    res.extracted.batch_no.confidence,
+    res.extracted.expiry.confidence,
+  ].filter((c) => typeof c === "number" && c > 0);
+
+  const avgConfidence = confValues.length > 0
+    ? confValues.reduce((a, b) => a + b, 0) / confValues.length
+    : res.extracted.reg_no.confidence || 0.85;
+
+  const riskScore = res.batch_risk.score;
+  const level: "low" | "medium" | "high" =
+    riskScore >= 0.7 ? "high" : riskScore >= 0.4 ? "medium" : "low";
+
+  return {
+    scan_id: res.scan_id,
+    pack_name: packName,
+    verdict: res.verdict,
+    confidence: avgConfidence,
+    extracted: res.extracted,
+    checks: res.checks,
+    explanation: res.explanation,
+    next_step: res.next_step,
+    batch_risk: {
+      batch_no: res.batch_risk.batch_no,
+      score: res.batch_risk.score,
+      reports: res.batch_risk.reports,
+      level,
+    },
   };
 }
 
