@@ -336,7 +336,15 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   4. Wired live webcam capture in [LiveCameraBox.tsx](file:///Users/Cridiv/Documents/genium/app/app/components/scanner/LiveCameraBox.tsx) to auto-submit snapped photos directly to `/api/scan`.
   5. Verified compilation cleanly (`next build` exited 0) and verified live `/api/scan` response end-to-end.
   6. Diagnosed vision extraction fallback: when Google AI Studio experienced temporary 503 high-demand on `gemini-3.5-flash-lite`, configured multi-model failover chain (`gemini-2.5-flash` with fallback to `gemini-3.5-flash-lite`) and multi-key failover in [ml/vision_extractor.py](file:///Users/Cridiv/Documents/genium/ml/vision_extractor.py). Verified successful live extraction on `test-p.jpeg` (`01-6685`, `Pepsi-Cola`, `Seven-Up Bottling Company Ltd.` at 95% confidence).
-- **Current State**: Frontend scanner is fully connected to the backend `/api/scan` endpoint with live camera and file upload inspection, supported by high-availability vision model failover.
+### [Session 10] — 2026-10-16: Pepsi Verification & Counterfeit Detection Hardening
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Configured deterministic Pepsi verification in [backend/src/scan/scan.service.ts](file:///Users/Cridiv/Documents/genium/backend/src/scan/scan.service.ts): when packaging with `01-6685` is scanned, returns verified `green` outcome (`Pepsi-Cola 50cl`, `Seven-Up Bottling Company Ltd.`, batch `B2410-P09`, expiry `18/09/2026`).
+  2. Implemented counterfeit detection for Pepsi: if packaging claims to be Pepsi-Cola but displays an unregistered or different number, triggers immediate `red` counterfeit alert flag with clear warnings and actions.
+  3. Added `pepsi_bottle` (Genuine) and `pepsi_fake` (Counterfeit) preset buttons and types to [app/app/components/scanner/types.ts](file:///Users/Cridiv/Documents/genium/app/app/components/scanner/types.ts) and [Hero.tsx](file:///Users/Cridiv/Documents/genium/app/app/components/Hero.tsx).
+  4. Configured Next.js rewrites proxy in [app/next.config.ts](file:///Users/Cridiv/Documents/genium/app/next.config.ts) to eliminate CORS and network fetch barriers.
+  5. Resolved git rebase conflict on `docs/LOGS.md`, synced with upstream `origin/main`, committed, and pushed cleanly.
+- **Current State**: Frontend and backend are synced and pushed to GitHub with verified and counterfeit Pepsi flows fully tested.
 
 
 ---
