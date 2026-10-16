@@ -260,6 +260,20 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   4. Verified healthcheck and error handling using Starlette TestClient (returns HTTP 200 with calibrated schema even on degraded input).
 - **Current State**: `ml/main.py` active and ready to be called over HTTP by the NestJS backend `ScanService`.
 
+### [Session 5] — 2026-10-16: Frontend Hero UI, Live Camera Box & Gradient ASCII Background Fix
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. **Perplexity/Kraft-inspired Hero Box**: Implemented dedicated medicine packaging verification box strictly for **Live Camera** and **File Attachments** (no text input box). Built [`LiveCameraBox.tsx`](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/components/scanner/LiveCameraBox.tsx) with live in-browser webcam feed, HUD reticle, laser line animation, and snapshot canvas.
+  2. **Modular Scanner HUD**: Extracted [`VerificationHUD.tsx`](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/components/scanner/VerificationHUD.tsx) for 3-tier verdict cards, decrypted metadata fields, collision alerts, and 5-language tabs (`EN`, `YO`, `HA`, `IG`, `PCM`).
+  3. **Diagnosed & Fixed Blank Gradient ASCII Background**:
+     - *Alpha Premultiplication*: WebGL context was using `alpha: true` and clamping `color.rgb` to fractional `color.a`, causing the browser compositor to blend pixels as transparent black into the background. Changed to opaque background with `outColor.a = 1.0` and `alpha: false`.
+     - *Atlas Texture Incompleteness*: Fixed non-power-of-two mipmap generation issue in `buildAtlas` by using standard `gl.RGBA` format with `gl.LINEAR` filtering, removing invalid mipmap calls that caused glyphs to sample as transparent (0, 0, 0, 0).
+     - *Shader Sampling*: Direct sampling of font atlas (`texture(uAtlas, atlasUv).a`) with bold glyph weight (`600`) and cyan/emerald luminescent highlight.
+     - *Removed Suffocating Mask*: Softened the `page.tsx` overlay from an 80% black blackout mask (`from-black/60 via-black/45 to-black/80`) to a gentle edge vignette (`from-black/40 via-transparent to-black/70 pointer-events-none`) so the radiant ASCII matrix beam shines through across the 100vh Navbar + Hero viewport.
+     - *Continuous Render Loop*: Removed loop stall conditions so shimmering ASCII characters animate continuously at 60fps and respond to pointer move/burst events.
+  4. Verified production build with `pnpm build` (exited 0, TypeScript cleanly compiled).
+- **Current State**: Frontend 100vh Navbar + Hero features a vibrant, interactive, and high-performance React Bits `GradientASCII` background behind the live camera scanner and hero HUD.
+
 ---
 
 ## 6. Known Gotchas & Constraints
