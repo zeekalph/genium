@@ -251,6 +251,15 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   5. Completed and checked off Hour 1:30–2:45 deliverables in [ml/checklist.md](file:///c:/Users/USER/Documents/GitHub/genium/ml/checklist.md).
 - **Current State**: Computer vision extraction and carton vs. blister packaging comparison engines are fully operational and verified end-to-end against the live NAFDAC SQLite database.
 
+### [Session 4] — 2026-10-16: FastAPI ML Vision Service Microservice (`ml/main.py`)
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Configured FastAPI microservice in `ml/main.py` exposing `POST /extract` and `GET /health`.
+  2. Implemented multipart image ingestion accepting primary (`image`/`file`) and optional secondary `blister` photos.
+  3. Integrated `VisionExtractor` pipeline with robust non-crashing fallback logic and latency tracking.
+  4. Verified healthcheck and error handling using Starlette TestClient (returns HTTP 200 with calibrated schema even on degraded input).
+- **Current State**: `ml/main.py` active and ready to be called over HTTP by the NestJS backend `ScanService`.
+
 ---
 
 ## 6. Known Gotchas & Constraints
