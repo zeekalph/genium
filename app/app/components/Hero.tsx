@@ -106,7 +106,7 @@ const Hero = () => {
       console.error("Scan verification failed:", err);
       setScanError(
         err.message ||
-          "Failed to scan packaging. Ensure backend server is running on port 5000."
+          "Failed to scan packaging. Ensure backend server is running on port 5000.",
       );
     } finally {
       clearInterval(stepInterval);
@@ -181,7 +181,7 @@ const Hero = () => {
         {/* Hero Title (Kraft-inspired typography with elegant italic keyword) */}
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-medium tracking-tight text-white leading-[1.15]">
           <BlurText
-            text="Verify with Genium —"
+            text="Verify with Genium"
             delay={40}
             className="block text-white"
           />
@@ -193,7 +193,7 @@ const Hero = () => {
             >
               future
             </span>{" "}
-            {/* of medicine safety */}
+            of products safety
           </span>
         </h1>
 
@@ -434,8 +434,12 @@ const Hero = () => {
             <div className="flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
               <div>
-                <p className="font-semibold text-white">Packaging Verification Error</p>
-                <p className="text-zinc-300 mt-0.5 leading-relaxed">{scanError}</p>
+                <p className="font-semibold text-white">
+                  Packaging Verification Error
+                </p>
+                <p className="text-zinc-300 mt-0.5 leading-relaxed">
+                  {scanError}
+                </p>
               </div>
             </div>
             <button
