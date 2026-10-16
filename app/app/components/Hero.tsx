@@ -83,12 +83,21 @@ const Hero = () => {
       }
 
       const apiBaseUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "";
 
-      const res = await fetch(`${apiBaseUrl}/api/scan`, {
-        method: "POST",
-        body: formData,
-      });
+      let res: Response;
+      try {
+        res = await fetch(`${apiBaseUrl}/api/scan`, {
+          method: "POST",
+          body: formData,
+        });
+      } catch (networkErr) {
+        // Fallback to explicit direct port 5000 if same-origin proxy fails
+        res = await fetch("http://127.0.0.1:5000/api/scan", {
+          method: "POST",
+          body: formData,
+        });
+      }
 
       if (!res.ok) {
         let msg = `Verification server returned status ${res.status}`;
@@ -346,6 +355,24 @@ const Hero = () => {
                 >
                   <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
                   <span>Augmentin Clone</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => triggerPreset("pepsi_bottle")}
+                  className="flex items-center gap-2 rounded-full bg-zinc-100 hover:bg-zinc-200/80 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-zinc-700 hover:text-zinc-900 transition-all cursor-pointer active:scale-95 shadow-xs"
+                >
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span>Pepsi 50cl</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => triggerPreset("pepsi_fake")}
+                  className="flex items-center gap-2 rounded-full bg-zinc-100 hover:bg-zinc-200/80 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-zinc-700 hover:text-zinc-900 transition-all cursor-pointer active:scale-95 shadow-xs"
+                >
+                  <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                  <span>Fake Pepsi</span>
                 </button>
 
                 <button
