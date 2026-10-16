@@ -9,13 +9,9 @@ import json
 import os
 import re
 from typing import Any, Dict, Optional, Union
-# pyrefly: ignore[missing-import]
 from dotenv import load_dotenv
-# pyrefly: ignore[missing-import]
 from google import genai
-# pyrefly: ignore[missing-import]
 from google.genai import types
-# pyrefly: ignore[missing-import]
 from PIL import Image
 
 from barcode_resolver import BarcodeResolver
