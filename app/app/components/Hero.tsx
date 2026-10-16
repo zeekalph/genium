@@ -107,10 +107,7 @@ const Hero = () => {
   }, [selectedImage, isAnalyzing]);
 
   return (
-    <section className="relative min-h-screen pt-28 pb-16 px-4 md:px-8 flex flex-col items-center justify-start overflow-hidden">
-      {/* Subtle ambient lighting vignette (minimalistic, matching screenshot) */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[500px] w-[900px] rounded-full bg-gradient-to-b from-sky-500/10 via-emerald-500/5 to-transparent blur-3xl opacity-60" />
-
+    <div className="relative flex-1 flex flex-col items-center justify-center pt-24 pb-12 px-4 md:px-8">
       {/* Main Container */}
       <div className="relative w-full max-w-4xl mx-auto flex flex-col items-center text-center">
         {/* Hero Title (Kraft-inspired typography with elegant italic keyword) */}
@@ -387,7 +384,7 @@ const Hero = () => {
           />
         )}
       </div>
-    </section>
+    </div>
   );
 };
 
