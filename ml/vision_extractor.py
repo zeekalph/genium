@@ -51,8 +51,10 @@ class VisionExtractor:
         self,
         api_key: Optional[str] = None,
         fallback_api_key: Optional[str] = None,
-        model: Optional[str] = None
+        model: Optional[str] = None,
+        timeout: Optional[int] = None
     ):
+        self.timeout = timeout
         primary_key = api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         fallback_key = fallback_api_key or os.getenv("GOOGLE_FALLBACK_API_KEY") or os.getenv("GEMINI_FALLBACK_API_KEY")
 

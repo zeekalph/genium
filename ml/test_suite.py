@@ -128,7 +128,7 @@ def run_suite():
         }
     ]
 
-    extractor = VisionExtractor(timeout=45)
+    extractor = VisionExtractor()
     results = []
     handoff_sample = None
 
