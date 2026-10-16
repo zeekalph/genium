@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import ShinyText from "./reactbits/ShinyText";
+import Image from "next/image";
 import Magnet from "./reactbits/Magnet";
+import ShinyText from "./reactbits/ShinyText";
 import {
-  ShieldCheck,
   KeyRound,
   CheckCircle2,
   X,
@@ -77,17 +77,23 @@ const Navbar = () => {
     <>
       <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/[0.08] bg-black/60 backdrop-blur-xl supports-[backdrop-filter]:bg-black/40">
         <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-3 sm:px-6 md:px-10">
-          {/* Logo + wordmark with React Bits Magnet & ShinyText */}
+          {/* Logo (no wordmark) with React Bits Magnet */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Magnet padding={20} magnetStrength={2}>
               <a
                 href="/"
-                className="flex items-center gap-2 select-none group touch-manipulation"
+                aria-label="Genium Home"
+                className="relative flex items-center justify-center select-none group touch-manipulation"
               >
-                <div className="relative flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg border border-sky-500/30 bg-sky-950/40 shadow-[0_0_12px_rgba(14,165,233,0.25)] transition-all group-hover:border-sky-400 group-hover:shadow-[0_0_18px_rgba(14,165,233,0.4)]">
-                  <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-400 shrink-0" />
-                  <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-400 animate-ping opacity-75" />
-                  <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-400" />
+                <div className="relative flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden border border-sky-500/30 bg-black shadow-[0_0_14px_rgba(14,165,233,0.3)] transition-all group-hover:border-sky-400 group-hover:scale-105 group-hover:shadow-[0_0_22px_rgba(14,165,233,0.5)]">
+                  <Image
+                    src="/logo.png"
+                    alt="Genium Logo"
+                    width={36}
+                    height={36}
+                    className="h-full w-full object-cover"
+                    priority
+                  />{" "}
                 </div>
                 <span
                   className="text-base sm:text-lg md:text-[1.25rem] font-bold tracking-tight text-white shrink-0"
