@@ -251,7 +251,7 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   5. Completed and checked off Hour 1:30–2:45 deliverables in [ml/checklist.md](file:///c:/Users/USER/Documents/GitHub/genium/ml/checklist.md).
 - **Current State**: Computer vision extraction and carton vs. blister packaging comparison engines are fully operational and verified end-to-end against the live NAFDAC SQLite database.
 
-### [Session 4] — 2026-10-16: FastAPI ML Vision Service Microservice (`ml/main.py`)
+### [Session 4b] — 2026-10-16: FastAPI ML Vision Service Microservice (`ml/main.py`)
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
   1. Configured FastAPI microservice in `ml/main.py` exposing `POST /extract` and `GET /health`.
@@ -259,6 +259,27 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   3. Integrated `VisionExtractor` pipeline with robust non-crashing fallback logic and latency tracking.
   4. Verified healthcheck and error handling using Starlette TestClient (returns HTTP 200 with calibrated schema even on degraded input).
 - **Current State**: `ml/main.py` active and ready to be called over HTTP by the NestJS backend `ScanService`.
+
+### [Session 5] — 2026-10-16: Barcode Scanning, QR Code & Redirected Link Resolution Engine
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Built [ml/barcode_resolver.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/barcode_resolver.py) using `zxing-cpp` to detect 1D barcodes (EAN-13, UPC, Code 128) and 2D codes (QR, DataMatrix, GS1 Digital Link) directly from packaging photos.
+  2. Implemented GS1 Digital Link parser extracting Application Identifiers: GTIN `(01)`, Batch `(10)`, Expiry `(17)`, and Serial `(21)`.
+  3. Built automated HTTP redirect follower (`resolve_url`): traces URL redirect chains safely, extracts destination HTML/JSON payloads, and uses Google AI Studio (`gemini-2.5-flash`) to parse structured regulatory details (`product_name`, `manufacturer`, `batch_no`, `verification_status`).
+  4. Integrated `BarcodeResolver` directly into [ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py) and [ml/main.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/main.py): single scan now simultaneously extracts packaging OCR and decodes & resolves barcode verification links.
+  5. Verified end-to-end with [ml/test_integrated_barcode_scan.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/test_integrated_barcode_scan.py): scanned composite medicine pack with QR code, followed redirect chain, and extracted structured drug verification details.
+- **Current State**: Vision model enhanced with dual-track verification: printed packaging OCR + barcode/QR digital link resolution.
+
+### [Session 6] — 2026-10-16: ScanModule Implementation with Clean DTO Architecture
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Built NestJS `ScanModule` (`src/scan/`) connecting `POST /api/scan` directly to the FastAPI ML vision microservice (`POST /extract`).
+  2. Separated all contracts and data shapes into dedicated DTO files: `src/scan/dto/scan-response.dto.ts` and `src/scan/dto/scan-request.dto.ts`.
+  3. Integrated deterministic Greenbook database checks against Prisma `Product` (11,135 registered medicines/foods), expiry date parsing, batch record lookups, and carton vs blister cross-verification.
+  4. Implemented 3-tier verdict system (`green`, `amber`, `red`) detecting cloned/fraudulent registrations.
+  5. Implemented full 5-language explanation mapping (`en`, `yo`, `ha`, `ig`, `pcm`) for zero-latency UI toggles.
+  6. Verified compilation cleanly with `pnpm run build` (0 errors).
+- **Current State**: `ScanModule` fully operational, cleanly typed with DTOs, and ready for integration.
 
 ### [Session 5] — 2026-10-16: Barcode Scanning, QR Code & Redirected Link Resolution Engine
 - **Engineer / Agent**: Team & Antigravity AI
@@ -285,12 +306,9 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 
 ### Backend Tasks (`backend/`)
 - [x] Set up database service (Prisma 7.0 / Better-SQLite3) with the 5 core tables and seed 11,135 NAFDAC products.
-- [ ] Create NestJS Modules:
-  - `HealthModule` (`/api/health`)
-  - `ScanModule` (`/api/scan`)
-  - `ReportModule` (`/api/report`)
-  - `BatchesModule` (`/api/hotspots`)
-  - `DatasetModule` (`/api/dataset`, `/api/dataset/export`)
+- [x] Create NestJS `ScanModule` (`/api/scan`) with dedicated DTOs and ML extraction integration.
+- [ ] Create remaining endpoints only upon explicit user instruction.
+
 - [ ] Enable CORS for frontend development (`localhost:3000`, `localhost:5173`) and production URLs.
 - [ ] Set up global API prefix (`/api`).
 - [ ] Implement contract-shaped mock responses for all 5 endpoints so frontend development can unblock immediately.
