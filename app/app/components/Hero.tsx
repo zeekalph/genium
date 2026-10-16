@@ -189,7 +189,11 @@ const Hero = () => {
                             </span>
                           </div>
                           <p className="text-xs text-zinc-500 mt-0.5">
-                            Photo ready. Press <span className="font-semibold text-zinc-900 font-mono">Enter</span> or click arrow to verify.
+                            Photo ready. Press{" "}
+                            <span className="font-semibold text-zinc-900 font-mono">
+                              Enter
+                            </span>{" "}
+                            or click arrow to verify.
                           </p>
                         </div>
                       </div>
@@ -213,7 +217,8 @@ const Hero = () => {
                       Drop packaging photo or scan to verify...
                     </span>
                     <span className="text-xs text-zinc-400/80 font-normal mt-2">
-                      Cross-checks NAFDAC Greenbook, batch registries & packaging authenticity
+                      Cross-checks NAFDAC Greenbook, batch registries &
+                      packaging authenticity
                     </span>
                   </div>
                 )}
@@ -256,7 +261,11 @@ const Hero = () => {
                       ? "bg-zinc-900 text-white"
                       : "bg-zinc-100 hover:bg-zinc-200/80 text-zinc-600 hover:text-zinc-900"
                   }`}
-                  title={isLiveCameraOpen ? "Close Live Camera" : "Open Live Web Camera"}
+                  title={
+                    isLiveCameraOpen
+                      ? "Close Live Camera"
+                      : "Open Live Web Camera"
+                  }
                 >
                   <Camera className="h-4 w-4" />
                 </button>
@@ -310,13 +319,13 @@ const Hero = () => {
                   ))}
                 </div>
 
-                {/* Solid Black Circular Button with ArrowRight (Identical to Kraft) */}
+                {/* Solid Blue Circular Button with ArrowRight (Identical to Kraft) */}
                 <Magnet padding={25} magnetStrength={2}>
                   <button
                     type="button"
                     onClick={handleImageSubmit}
                     disabled={isAnalyzing}
-                    className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-black text-white hover:bg-zinc-800 shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                    className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-sky-500 text-white hover:bg-zinc-800 shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                     title="Verify pack"
                   >
                     {isAnalyzing ? (

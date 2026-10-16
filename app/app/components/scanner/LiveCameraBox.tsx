@@ -8,7 +8,10 @@ interface LiveCameraBoxProps {
   onClose: () => void;
 }
 
-export const LiveCameraBox: React.FC<LiveCameraBoxProps> = ({ onCapture, onClose }) => {
+export const LiveCameraBox: React.FC<LiveCameraBoxProps> = ({
+  onCapture,
+  onClose,
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -28,7 +31,9 @@ export const LiveCameraBox: React.FC<LiveCameraBoxProps> = ({ onCapture, onClose
 
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Web camera is not supported in this browser environment.");
+        throw new Error(
+          "Web camera is not supported in this browser environment.",
+        );
       }
 
       // Try environment/back camera first, fallback to generic video
@@ -61,7 +66,7 @@ export const LiveCameraBox: React.FC<LiveCameraBoxProps> = ({ onCapture, onClose
       setErrorMessage(
         err.name === "NotAllowedError" || err.name === "PermissionDeniedError"
           ? "Camera permission denied. Please allow camera access in your browser settings."
-          : "Webcam not found or currently in use by another application."
+          : "Webcam not found or currently in use by another application.",
       );
     } finally {
       setIsStarting(false);
@@ -103,12 +108,12 @@ export const LiveCameraBox: React.FC<LiveCameraBoxProps> = ({ onCapture, onClose
         onCapture(file);
       },
       "image/jpeg",
-      0.92
+      0.92,
     );
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-sky-500/30 bg-black/90 p-4 text-center shadow-2xl">
+    <div className="relative w-full overflow-hidden rounded-2xl border border-sky-500/30 p-4 text-center shadow-2xl">
       {/* Hidden processing canvas */}
       <canvas ref={canvasRef} className="hidden" />
 
@@ -116,7 +121,7 @@ export const LiveCameraBox: React.FC<LiveCameraBoxProps> = ({ onCapture, onClose
       <div className="flex items-center justify-between pb-3 text-xs text-zinc-300">
         <div className="flex items-center gap-2">
           <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-medium text-white">Live Web Optical Scanner</span>
+          <span className="font-medium text-black">Live Camera</span>
           <span className="rounded bg-sky-500/20 px-2 py-0.5 text-[10px] font-mono text-sky-300 border border-sky-500/30">
             Gemma 4 Vision Ready
           </span>
@@ -181,17 +186,17 @@ export const LiveCameraBox: React.FC<LiveCameraBoxProps> = ({ onCapture, onClose
         <div className="mt-4 flex items-center justify-center gap-4">
           <button
             onClick={onClose}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-zinc-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            className="rounded-xl border border-black bg-black px-4 py-2 text-xs font-medium text-white hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
           >
             Cancel
           </button>
 
           <button
             onClick={handleCapture}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-sky-500/20 hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white hover:opacity-95 active:scale-95 transition-all cursor-pointer"
           >
             <Camera className="h-4 w-4" />
-            <span>Snap & Inspect Pack</span>
+            <span>Capture</span>
           </button>
         </div>
       )}

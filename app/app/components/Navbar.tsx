@@ -91,7 +91,7 @@ const Navbar = () => {
 
           {/* Nav links with React Bits Magnet */}
           <div className="hidden items-center gap-8 md:flex">
-            <Magnet padding={40} magnetStrength={4}>
+            {/* <Magnet padding={40} magnetStrength={4}>
               <a
                 href="#features"
                 className="text-sm font-medium text-zinc-300 transition-colors hover:text-white"
@@ -114,7 +114,7 @@ const Navbar = () => {
               >
                 FAQ
               </a>
-            </Magnet>
+            </Magnet> */}
           </div>
 
           {/* Actions: Sign in / Judge Demo Pass with Magnet */}
