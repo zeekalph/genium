@@ -298,16 +298,14 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   6. Verified compilation cleanly with `pnpm run build` (0 errors).
 - **Current State**: `ScanModule` fully operational, cleanly typed with DTOs, and ready for integration.
 
-### [Session 5] — 2026-10-16: Barcode Scanning, QR Code & Redirected Link Resolution Engine
-
+### [Session 7] — 2026-10-16: MicroSlats Background Integration (React Bits + ogl)
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
-  1. Built [ml/barcode_resolver.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/barcode_resolver.py) using `zxing-cpp` to detect 1D barcodes (EAN-13, UPC, Code 128) and 2D codes (QR, DataMatrix, GS1 Digital Link) directly from packaging photos.
-  2. Implemented GS1 Digital Link parser extracting Application Identifiers: GTIN `(01)`, Batch `(10)`, Expiry `(17)`, and Serial `(21)`.
-  3. Built automated HTTP redirect follower (`resolve_url`): traces URL redirect chains safely, extracts destination HTML/JSON payloads, and uses Google AI Studio (`gemini-2.5-flash`) to parse structured regulatory details (`product_name`, `manufacturer`, `batch_no`, `verification_status`).
-  4. Integrated `BarcodeResolver` directly into [ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py) and [ml/main.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/main.py): single scan now simultaneously extracts packaging OCR and decodes & resolves barcode verification links.
-  5. Verified end-to-end with [ml/test_integrated_barcode_scan.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/test_integrated_barcode_scan.py): scanned composite medicine pack with QR code, followed redirect chain, and extracted structured drug verification details.
-- **Current State**: Vision model enhanced with dual-track verification: printed packaging OCR + barcode/QR digital link resolution.
+  1. Installed `ogl` (v1.0.11) dependency in `app/`.
+  2. Implemented [MicroSlats.tsx](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/components/reactbits/MicroSlats.tsx) using `ogl` (WebGL2 fluid simulation, curl/vorticity passes, dynamic perspective swell wave engine, and interactive cursor ripples).
+  3. Integrated `<MicroSlats />` into [`app/app/page.tsx`](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/page.tsx) strictly for the 100vh Navbar + Hero viewport with deep cybernetic medical palette (`color="#0284c7"`, `glintColor="#38bdf8"`, `backgroundColor="#020617"`, `preset="swell"`, `interactive={true}`).
+  4. Verified full compilation with `pnpm build` (exited 0 with static optimization in 513ms).
+- **Current State**: 100vh Hero viewport runs the interactive, high-performance `MicroSlats` fluid wave simulation background.
 
 ---
 
