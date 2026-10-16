@@ -57,7 +57,7 @@ class VisionExtractor:
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         model: Optional[str] = None,
-        timeout: int = 15
+        timeout: int = 45
     ):
         self.api_key = api_key or os.getenv("NVIDIA_API_KEY")
         self.base_url = base_url or os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
