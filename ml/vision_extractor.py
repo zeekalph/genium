@@ -9,10 +9,16 @@ import json
 import os
 import re
 from typing import Any, Dict, Optional, Union
+# pyrefly: ignore[missing-import]
 from dotenv import load_dotenv
+# pyrefly: ignore[missing-import]
 from google import genai
+# pyrefly: ignore[missing-import]
 from google.genai import types
+# pyrefly: ignore[missing-import]
 from PIL import Image
+
+from barcode_resolver import BarcodeResolver
 
 load_dotenv()
 
@@ -53,6 +59,7 @@ class VisionExtractor:
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         self.model = model or os.getenv("GOOGLE_VISION_MODEL", "gemini-2.5-flash")
         self.client = genai.Client(api_key=self.api_key)
+        self.barcode_resolver = BarcodeResolver(api_key=self.api_key, model=self.model)
 
     def _prepare_image(self, image_input: Union[str, Image.Image, bytes]) -> Image.Image:
         """Loads and prepares PIL Image."""
@@ -91,6 +98,7 @@ class VisionExtractor:
             "manufacturer": {"value": None, "confidence": 0.0},
             "batch_no": {"value": None, "confidence": 0.0},
             "expiry": {"value": None, "confidence": 0.0},
+            "barcode": {"detected": False, "barcodes": [], "link_resolution": None}
         }
 
         try:
@@ -152,6 +160,13 @@ class VisionExtractor:
                     "value": str(val).strip() if val is not None else None,
                     "confidence": round(max(0.0, min(1.0, conf)), 2)
                 }
+
+            # Scan barcodes and resolve any redirected verification links
+            try:
+                validated["barcode"] = self.barcode_resolver.scan_and_resolve(img)
+            except Exception as e:
+                print(f"[VisionExtractor] Barcode scan error: {e}")
+                validated["barcode"] = {"detected": False, "barcodes": [], "link_resolution": None}
 
             return validated
 
