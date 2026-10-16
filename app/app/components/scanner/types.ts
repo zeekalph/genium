@@ -1,31 +1,104 @@
 export type LanguageKey = "en" | "yo" | "ha" | "ig" | "pcm";
 
+export interface ExtractedField {
+  value: string | null;
+  confidence: number;
+}
+
+export interface VerificationCheck {
+  id: string;
+  pass: boolean | null;
+  detail: string;
+}
+
+export interface BackendScanResponse {
+  scan_id: string;
+  extracted: {
+    reg_no: ExtractedField;
+    product_name: ExtractedField;
+    manufacturer: ExtractedField;
+    batch_no: ExtractedField;
+    expiry: ExtractedField;
+  };
+  checks: VerificationCheck[];
+  verdict: "green" | "amber" | "red";
+  explanation: string;
+  next_step: string;
+  batch_risk: {
+    batch_no: string;
+    reports: number;
+    score: number;
+  };
+}
+
 export interface ScanResult {
   scan_id: string;
   pack_name: string;
   verdict: "green" | "amber" | "red";
   confidence: number;
   extracted: {
-    reg_no: string;
-    product_name: string;
-    manufacturer: string;
-    batch_no: string;
-    expiry: string;
+    reg_no: string | ExtractedField;
+    product_name: string | ExtractedField;
+    manufacturer: string | ExtractedField;
+    batch_no: string | ExtractedField;
+    expiry: string | ExtractedField;
   };
-  checks: {
-    reg_exists: boolean;
-    reg_matches_prod: boolean;
-    registered_as?: string;
-    dates_valid: boolean;
-    carton_vs_blister: boolean | null;
-    batch_reports_count: number;
-  };
-  explanations: Record<LanguageKey, string>;
+  checks:
+    | {
+        reg_exists: boolean;
+        reg_matches_prod: boolean;
+        registered_as?: string;
+        dates_valid: boolean;
+        carton_vs_blister: boolean | null;
+        batch_reports_count: number;
+      }
+    | VerificationCheck[];
+  explanation?: string;
+  explanations?: Partial<Record<LanguageKey, string>>;
   next_step: string;
   batch_risk: {
     batch_no: string;
     score: number;
-    level: "low" | "medium" | "high";
+    level?: "low" | "medium" | "high";
+    reports?: number;
+  };
+}
+
+export function normalizeBackendScanResponse(res: BackendScanResponse): ScanResult {
+  const regNo = res.extracted.reg_no.value || "Unidentified";
+  const prodName = res.extracted.product_name.value;
+  const packName = prodName ? `${prodName} (${regNo})` : `Packaging (${regNo})`;
+
+  const confValues = [
+    res.extracted.reg_no.confidence,
+    res.extracted.product_name.confidence,
+    res.extracted.batch_no.confidence,
+    res.extracted.expiry.confidence,
+  ].filter((c) => typeof c === "number" && c > 0);
+
+  const avgConfidence = confValues.length > 0
+    ? confValues.reduce((a, b) => a + b, 0) / confValues.length
+    : res.extracted.reg_no.confidence || 0.85;
+
+  const riskScore = res.batch_risk.score;
+  const level: "low" | "medium" | "high" =
+    riskScore >= 0.7 ? "high" : riskScore >= 0.4 ? "medium" : "low";
+
+  return {
+    scan_id: res.scan_id,
+    pack_name: packName,
+    verdict: res.verdict,
+    confidence: avgConfidence,
+    extracted: res.extracted,
+    checks: res.checks,
+    explanation: res.explanation,
+    next_step: res.next_step,
+    batch_risk: {
+      batch_no: res.batch_risk.batch_no,
+      score: res.batch_risk.score,
+      reports: res.batch_risk.reports,
+      level,
+    },
   };
 }
 
@@ -138,6 +211,78 @@ export const DEMO_PRESETS: Record<string, ScanResult> = {
       batch_no: "AM2308",
       score: 0.76,
       level: "medium",
+    },
+  },
+  pepsi_bottle: {
+    scan_id: "sc_pep_016685",
+    pack_name: "Pepsi-Cola 50cl (Verified Bottle)",
+    verdict: "green",
+    confidence: 0.98,
+    extracted: {
+      reg_no: "01-6685",
+      product_name: "Pepsi-Cola 50cl",
+      manufacturer: "Seven-Up Bottling Company Ltd.",
+      batch_no: "B2410-P09",
+      expiry: "18/09/2026",
+    },
+    checks: {
+      reg_exists: true,
+      reg_matches_prod: true,
+      dates_valid: true,
+      carton_vs_blister: true,
+      batch_reports_count: 0,
+    },
+    explanation:
+      "Verified Clear: Registration number 01-6685 officially matches Pepsi-Cola by Seven-Up Bottling Company Ltd. in the NAFDAC database. Packaging markings, expiration date (18/09/2026), and batch records have zero red flags.",
+    explanations: {
+      en: "Verified Clear: Registration number 01-6685 officially matches Pepsi-Cola by Seven-Up Bottling Company Ltd. in the NAFDAC database. Packaging markings, expiration date (18/09/2026), and batch records have zero red flags.",
+      yo: "Ayẹwo tọ: Nọmba 01-6685 ba Pepsi-Cola ti Seven-Up Bottling Company mu ninu akọsilẹ NAFDAC. Oogun naa ko ni aburu kankan.",
+      ha: "Tabbatarwa daidai: Lambar 01-6685 ta dace da Pepsi-Cola a kundin NAFDAC. Babu wani matsala.",
+      ig: "Nkwado zuru oke: Nọmba 01-6685 dabara na Pepsi-Cola nke Seven-Up Bottling Company n'akwụkwọ NAFDAC.",
+      pcm: "Verified Clear: Di NAFDAC number 01-6685 match Pepsi-Cola by Seven-Up Bottling Company for NAFDAC record. Everything check out well.",
+    },
+    next_step: "Safe for consumption. Store in a cool, dry place away from direct sunlight.",
+    batch_risk: {
+      batch_no: "B2410-P09",
+      score: 0.05,
+      level: "low",
+    },
+  },
+  pepsi_fake: {
+    scan_id: "sc_pep_fake",
+    pack_name: "Pepsi-Cola (Counterfeit Bottle)",
+    verdict: "red",
+    confidence: 0.95,
+    extracted: {
+      reg_no: "A1-9921",
+      product_name: "Pepsi-Cola (Counterfeit)",
+      manufacturer: "Purported Seven-Up Bottling Co.",
+      batch_no: "FK2401-BAD",
+      expiry: "2026-09",
+    },
+    checks: {
+      reg_exists: false,
+      reg_matches_prod: false,
+      registered_as: "Official Pepsi-Cola requires NAFDAC Reg No: 01-6685",
+      dates_valid: false,
+      carton_vs_blister: false,
+      batch_reports_count: 8,
+    },
+    explanation:
+      "Counterfeit Alert: This product is labeled as Pepsi-Cola, but displays registration number A1-9921 instead of the verified NAFDAC registration number 01-6685. This is a confirmed counterfeit / cloned packaging. Do not drink.",
+    explanations: {
+      en: "Counterfeit Alert: This product is labeled as Pepsi-Cola, but displays registration number A1-9921 instead of the verified NAFDAC registration number 01-6685. This is a confirmed counterfeit / cloned packaging. Do not drink.",
+      yo: "Ikilọ Ayederu: Oogun/ohun mimu yi ni a pe ni Pepsi-Cola, ṣugbọn o ni nọmba A1-9921 dipo 01-6685 to tọ. Ayederu ni, maṣe mu u.",
+      ha: "Gargadi Magani/Abinsha na Jabu: Wannan yana da sunan Pepsi-Cola, amma lambar rajista ta nuna A1-9921 maimakon 01-6685. Jabun kaya ne, kada a sha.",
+      ig: "Ịdọ aka ná ntị: Ngwaahịa a na-ekwu na ọ bụ Pepsi-Cola, mana nọmba ndebanye aha ya bụ A1-9921 kama 01-6685. Ọ bụ adịgboroja, anụla ya.",
+      pcm: "Counterfeit Alert: Dem write Pepsi-Cola for dis bottle, but di NAFDAC number na A1-9921 instead of real number 01-6685. Dis na fake bottle, abeg no drink am.",
+    },
+    next_step:
+      "DO NOT CONSUME. Hand over this fake bottle to the nearest NAFDAC office or licensed consumer health authority.",
+    batch_risk: {
+      batch_no: "FK2401-BAD",
+      score: 0.94,
+      level: "high",
     },
   },
 };

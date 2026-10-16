@@ -7,8 +7,8 @@ from fastapi import FastAPI, File, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-# Load environment variables
-load_dotenv()
+# Load environment variables with override
+load_dotenv(override=True)
 
 from vision_extractor import VisionExtractor
 from blister_comparator import BlisterComparator

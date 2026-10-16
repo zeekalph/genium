@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Genium",
   description: "Detect - fake products without using it",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

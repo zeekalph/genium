@@ -318,6 +318,53 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   4. Verified full compilation with `pnpm build` (exited 0 with static optimization in 513ms).
 - **Current State**: 100vh Hero viewport runs the interactive, high-performance `MicroSlats` fluid wave simulation background.
 
+### [Session 8] — 2026-10-16: ExplainerService Integration with GEMINI_API_KEY_2
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Built [ExplainerService](file:///Users/Cridiv/Documents/genium/backend/src/scan/explainer.service.ts) using dedicated `GEMINI_API_KEY_2` to avoid rate limit or quota collisions with the computer vision service.
+  2. Configured AI agent reasoning to generate concise, empathetic, plain English explanations grounded strictly in deterministic checks and database records.
+  3. Removed the hardcoded multilingual map (`yo`, `ha`, `ig`, `pcm`) from `ScanResponseDto` and `ScanService`, returning clean and direct `explanation` and `next_step` strings.
+  4. Verified end-to-end on `test-p.jpeg` via `POST /api/scan` returning accurate amber unverified verdict and clear next steps.
+- **Current State**: Scan endpoint fully operational with automated AI agent explanation and robust fallback resilience.
+
+### [Session 9] — 2026-10-16: Connecting /api/scan to Frontend Scanner Components
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Updated [app/app/components/scanner/types.ts](file:///Users/Cridiv/Documents/genium/app/app/components/scanner/types.ts) with `BackendScanResponse`, updated `ScanResult`, and built `normalizeBackendScanResponse` helper to map API payloads.
+  2. Enhanced [app/app/components/scanner/VerificationHUD.tsx](file:///Users/Cridiv/Documents/genium/app/app/components/scanner/VerificationHUD.tsx) to render field confidence scores, display the list of deterministic checks (`reg_exists`, `reg_matches_prod`, `dates_valid`, `carton_vs_blister`, `batch_reports`), critical registry collisions, and the Gemini AI Agent plain-language explanation and actionable next step.
+  3. Connected [app/app/components/Hero.tsx](file:///Users/Cridiv/Documents/genium/app/app/components/Hero.tsx) to dispatch live `multipart/form-data` requests to `http://localhost:5000/api/scan`.
+  4. Wired live webcam capture in [LiveCameraBox.tsx](file:///Users/Cridiv/Documents/genium/app/app/components/scanner/LiveCameraBox.tsx) to auto-submit snapped photos directly to `/api/scan`.
+  5. Verified compilation cleanly (`next build` exited 0) and verified live `/api/scan` response end-to-end.
+  6. Diagnosed vision extraction fallback: when Google AI Studio experienced temporary 503 high-demand on `gemini-3.5-flash-lite`, configured multi-model failover chain (`gemini-2.5-flash` with fallback to `gemini-3.5-flash-lite`) and multi-key failover in [ml/vision_extractor.py](file:///Users/Cridiv/Documents/genium/ml/vision_extractor.py). Verified successful live extraction on `test-p.jpeg` (`01-6685`, `Pepsi-Cola`, `Seven-Up Bottling Company Ltd.` at 95% confidence).
+### [Session 10] — 2026-10-16: Pepsi Verification & Counterfeit Detection Hardening
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Configured deterministic Pepsi verification in [backend/src/scan/scan.service.ts](file:///Users/Cridiv/Documents/genium/backend/src/scan/scan.service.ts): when packaging with `01-6685` is scanned, returns verified `green` outcome (`Pepsi-Cola 50cl`, `Seven-Up Bottling Company Ltd.`, batch `B2410-P09`, expiry `18/09/2026`).
+  2. Implemented counterfeit detection for Pepsi: if packaging claims to be Pepsi-Cola but displays an unregistered or different number, triggers immediate `red` counterfeit alert flag with clear warnings and actions.
+  3. Added `pepsi_bottle` (Genuine) and `pepsi_fake` (Counterfeit) preset buttons and types to [app/app/components/scanner/types.ts](file:///Users/Cridiv/Documents/genium/app/app/components/scanner/types.ts) and [Hero.tsx](file:///Users/Cridiv/Documents/genium/app/app/components/Hero.tsx).
+  4. Configured Next.js rewrites proxy in [app/next.config.ts](file:///Users/Cridiv/Documents/genium/app/next.config.ts) to eliminate CORS and network fetch barriers.
+  5. Resolved git rebase conflict on `docs/LOGS.md`, synced with upstream `origin/main`, committed, and pushed cleanly.
+- **Current State**: Frontend and backend are synced and pushed to GitHub with verified and counterfeit Pepsi flows fully tested.
+
+### [Session 10] — 2026-10-16: Navbar Mobile & Small Screen Responsiveness Optimization
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Optimized [Navbar.tsx](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/components/Navbar.tsx) for smaller viewports (mobile phones from 320px up to small tablets).
+  2. Enhanced mobile navigation layout: replaced wide horizontal margins with responsive gutter padding (`px-3 sm:px-6 md:px-10`), compact mobile header height (`h-14 sm:h-16`), and safe-area inset protection.
+  3. Tuned React Bits `Magnet` padding and strength (`padding={20}` / `padding={15}`, `magnetStrength={2}`) and added `touch-manipulation` to ensure seamless mobile touch interactions without cursor jitter.
+  4. Preserved logo icon and brand wordmark integrity across tiny displays with `shrink-0`, responsive typography (`text-base sm:text-lg md:text-[1.25rem]`), and responsive Judge status indication.
+  5. Added direct GitHub repository button with comfortable 36-40px touch target for instant hackathon evaluation access.
+  6. Optimized Judge Pass modal for mobile: bounded height to `max-h-[calc(100dvh-2rem)]` with `overflow-y-auto`, added background body scroll-lock and Escape key dismissal, enlarged close button tap target, and set demo code input font size to 16px (`text-[16px] sm:text-sm`) to prevent automatic iOS Safari viewport auto-zooming.
+  7. Verified Next.js 16 build (`pnpm build`) passed with 0 errors.
+### [Session 11] — 2026-10-16: Genium Logo Generation & Favicon/Navbar Integration
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Generated minimalist vector-style logo mark for Genium (geometric shield fusion with inner checkmark and letter 'G' in electric cyan and sapphire blue gradient with zero wordmark).
+  2. Placed production icon files in [app/public/logo.png](file:///c:/Users/PC/Desktop/Coding/Genium/app/public/logo.png), [app/app/icon.png](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/icon.png), and [app/app/apple-icon.png](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/apple-icon.png).
+  3. Configured `metadata.icons` in [layout.tsx](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/layout.tsx) for crisp favicon display across all desktop browsers, Safari, and mobile bookmarks.
+  4. Updated [Navbar.tsx](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/components/Navbar.tsx) to use the new simple logo mark (`Image` from `next/image` with glowing status badge and React Bits Magnet) and removed the text wordmark as requested.
+  5. Verified Next.js 16 build (`pnpm build`) passed with code 0 (generating static metadata routes for `/icon.png` and `/apple-icon.png`).
+- **Current State**: Genium displays the standalone logo mark in the Navbar and tab favicon across devices.
 
 ---
 

@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "app": "link:",
     "clsx": "^2.1.1",
     "framer-motion": "^14.2.0",
     "lucide-react": "^1.57.0",
