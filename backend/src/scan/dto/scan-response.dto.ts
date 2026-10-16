@@ -17,14 +17,6 @@ export class VerificationCheckDto {
   detail: string;
 }
 
-export class MultilingualExplanationsDto {
-  en: string;
-  yo: string;
-  ha: string;
-  ig: string;
-  pcm: string;
-}
-
 export class BatchRiskDto {
   batch_no: string;
   reports: number;
@@ -37,7 +29,6 @@ export class ScanResponseDto {
   checks: VerificationCheckDto[];
   verdict: 'green' | 'amber' | 'red';
   explanation: string;
-  explanations: MultilingualExplanationsDto;
   next_step: string;
   batch_risk: BatchRiskDto;
 }

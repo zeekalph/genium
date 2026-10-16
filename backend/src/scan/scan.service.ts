@@ -6,9 +6,9 @@ import {
   ScanResponseDto,
   ExtractedPackagingDto,
   VerificationCheckDto,
-  MultilingualExplanationsDto,
 } from './dto/scan-response.dto';
 import { SupportedLanguage } from './dto/scan-request.dto';
+import { ExplainerService } from './explainer.service';
 
 
 @Injectable()
@@ -16,7 +16,11 @@ export class ScanService {
   private readonly logger = new Logger(ScanService.name);
   private readonly mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
 
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    private readonly explainerService: ExplainerService,
+  ) {}
+
 
 
   async processScan(
@@ -248,23 +252,13 @@ export class ScanService {
       verdict = 'green';
     }
 
-    // 7. Explanations in 5 Nigerian Languages (zero-latency UI switching)
-    const explanations = this.generateMultilingualExplanations(
+    // 7. Generate explanation and next step guidance via ExplainerService (AI Agent)
+    const { explanation, next_step } = await this.explainerService.explain(
       verdict,
       checks,
-      rawProdName,
-      registeredProduct?.name,
-      rawBatch,
+      extracted,
+      registeredProduct,
     );
-    const activeExplanation = explanations[lang as keyof typeof explanations] || explanations.en;
-
-    // Next step guidance
-    let nextStep = 'Verify MAS scratch code if available on packaging.';
-    if (verdict === 'red') {
-      nextStep = 'Do not consume. Show this pack to a licensed pharmacist or report to NAFDAC immediately.';
-    } else if (verdict === 'amber') {
-      nextStep = 'Consult a certified pharmacist to verify packaging security markings and batch legitimacy.';
-    }
 
     const elapsedMs = Date.now() - startTime;
 
@@ -290,9 +284,8 @@ export class ScanService {
       extracted,
       checks,
       verdict,
-      explanation: activeExplanation,
-      explanations,
-      next_step: nextStep,
+      explanation,
+      next_step,
       batch_risk: {
         batch_no: rawBatch || 'UNKNOWN',
         reports: reportCount,
@@ -429,85 +422,5 @@ export class ScanService {
     }
   }
 
-  private generateMultilingualExplanations(
-    verdict: 'green' | 'amber' | 'red',
-    checks: VerificationCheckDto[],
-    productName: string,
-    registeredName?: string,
-    batchNo?: string,
-  ): MultilingualExplanationsDto {
-    const regMatchCheck = checks.find((c) => c.id === 'reg_matches_prod');
-    const batchCheck = checks.find((c) => c.id === 'batch_reports');
-    const dateCheck = checks.find((c) => c.id === 'dates_valid');
-    const blisterCheck = checks.find((c) => c.id === 'carton_vs_blister');
-
-    if (verdict === 'red') {
-      if (regMatchCheck?.pass === false) {
-        return {
-          en: `Critical Alert: The registration number printed on this packaging belongs to ${registeredName || 'another drug'} in the NAFDAC Greenbook, but the pack says ${productName || 'a different product'}. Suspected cloned registration.`,
-          yo: `Ìkìlọ̀ Pàjáwìrì: Nọ́mbà ìforúkọsílẹ̀ lórí àpótí yìí jẹ́ ti ${registeredName || 'oògùn mìíràn'} nínú àkọsílẹ̀ NAFDAC, ṣùgbọ́n àpótí sọ pé ${productName || 'oògùn ọ̀tọ̀'}. Ìfura wà pé wọ́n jí nọ́mbà náà lò.`,
-          ha: `Gargadi Mai Karfi: Wannan lambar rajista ta ${registeredName || 'wani magani daban'} ce a cikin bayanan NAFDAC, amma an rubuta ${productName || 'wani magani'} a jikin kwalin. Ana zargin an kwaikwayi lambar ne.`,
-          ig: `Ịdọ aka ná ntị dị mkpa: Nọmba ndebanye aha a bụ nke ${registeredName || 'ọgwụ ọzọ'} na ndekọ NAFDAC, mana ngwugwu na-ekwu ${productName || 'ọgwụ dị iche'}. Enwere enyo na e ji aka mere ya.`,
-          pcm: `Danger Alert: Dis registration number na for ${registeredName || 'different medicine'} inside NAFDAC Greenbook, but the pack write ${productName || 'another thing'}. Person don duplicate legit number put for fake pack.`,
-        };
-      }
-
-      if (batchCheck?.pass === false) {
-        return {
-          en: `Alert: Batch ${batchNo || ''} has multiple adverse reports filed by verified community members and pharmacies. Elevated risk detected.`,
-          yo: `Ìkìlọ̀: Àwọn ará ìlú àti àwọn oníṣègùn ti fi ẹ̀sùn púpọ̀ kan ìpín oògùn (batch ${batchNo || ''}) yìí pé kò dára. Ewu wà nínú rẹ̀.`,
-          ha: `Gargadi: Wannan rukuni (batch ${batchNo || ''}) yana da rahotannin rashin inganci da dama daga al'umma da masu harhada magunguna.`,
-          ig: `Ịdọ aka ná ntị: Ngwugwu a (batch ${batchNo || ''}) nwere ọtụtụ akụkọ na ọ dịghị mma site n'aka ndị obodo na ndị na-ere ọgwụ.`,
-          pcm: `Wahala Alert: Dis batch ${batchNo || ''} get plenty bad reports from people and pharmacy say something seriously wrong with am.`,
-        };
-      }
-
-      if (dateCheck?.pass === false) {
-        return {
-          en: 'Warning: This product has passed its declared expiration date. Expired medicines lose potency and may cause toxicity.',
-          yo: 'Ìkìlọ̀: Ọjọ́ orí oògùn yìí ti kọjá (ó ti bàjẹ́). Oògùn tí ó ti bàjẹ́ kò ní agbára mọ́ ó sì lè pani lára.',
-          ha: 'Gargadi: Wannan maganin ya wuce ranar karewar amfaninsa. Maganin da ya dade ba shi da aiki kuma zai iya zama guba.',
-          ig: 'Ịdọ aka ná ntị: Ọgwụ a agafeela ụbọchị mmebi ya. Ọgwụ mebiri emebi adịghị arụ ọrụ nke ọma ma nwee ike imerụ ahụ.',
-          pcm: 'Warning: Dis medicine don expire. Expired medicine no dey work and e fit give person sickness or poison.',
-        };
-      }
-
-      if (blisterCheck?.pass === false) {
-        return {
-          en: 'Packaging Mismatch: Batch number or expiry date on the outer carton contradicts the inner blister strip.',
-          yo: 'Àpótí Kò Bá Nǹkan Inú Mu: Nọ́mbà batch tàbí ọjọ́ orí lórí àpótí kò bá ti inú blister mu.',
-          ha: 'Kuskure a Marufi: Lambar rukuni ko ranar karewa a kwalin waje ba ta zo daya da ta ciki ba.',
-          ig: 'Ihe ngwugwu adabaghị: Nọmba ngwugwu ma ọ bụ ụbọchị mmebi na igbe dị iche na nke dị n\'ime blister.',
-          pcm: 'Packaging No Match: The batch number or expiry date on top carton no match wetin dey inside the blister strip.',
-        };
-      }
-
-      return {
-        en: 'Warning: Verification failed. The details on this packaging contradict verified records.',
-        yo: 'Ìkìlọ̀: Ìmúdájú kùnà. Àwọn kókó ọ̀rọ̀ lórí àpótí yìí tako àkọsílẹ̀.',
-        ha: 'Gargadi: Binciken ya nuna kuskure. Bayanan da ke jikin marufin sun saba wa bayanan hukuma.',
-        ig: 'Ịdọ aka ná ntị: Nnyocha adaala. Ihe ndị dị na ngwugwu a emegidela ndekọ ndị a ma ama.',
-        pcm: 'Warning: Check fail. Wetin dey this pack contradict the official records.',
-      };
-    }
-
-    if (verdict === 'amber') {
-      return {
-        en: 'Unverified: Registration details could not be matched with certainty in the current NAFDAC snapshot. Confirm with a licensed pharmacist.',
-        yo: 'Kò tíì fọwọ́ sí: A kò tíì rí ẹ̀rí dájú nínú àkọsílẹ̀ NAFDAC fún àpótí yìí. Fọ̀rọ̀ wá oníṣègùn lẹ́nu wò.',
-        ha: 'Ba a tantance ba: Ba a sami tabbacin bayanan rajista a cikin bayanan NAFDAC ba. Tuntubi kwararren mai magani.',
-        ig: 'A kwadoghị ya: Enweghị ike ijide n\'aka na ndekọ NAFDAC maka ngwugwu a. Gwa onye na-ere ọgwụ nwere ikikere ka o lelee ya.',
-        pcm: 'We never verify am: We no fit confirm this registration number full-full inside current NAFDAC record. Abeg ask real pharmacist make dem look am.',
-      };
-    }
-
-    // Default green: No red flags found (never claim chemical purity)
-    return {
-      en: 'No red flags found. Registration number matches NAFDAC Greenbook records and packaging dates are valid.',
-      yo: 'Kò sí àmì ewu kankan tí a rí. Nọ́mbà ìforúkọsílẹ̀ bá àkọsílẹ̀ NAFDAC mu, ọjọ́ orí àpótí sì péye.',
-      ha: 'Babu wata alamar hadari da aka samu. Lambar rajista ta yi daidai da bayanan NAFDAC kuma kwanan wata yana da kyau.',
-      ig: 'Enweghị ihe egwu ọ bụla ahụrụ. Nọmba ndebanye aha dabara na ndekọ NAFDAC, ụbọchị ngwugwu dịkwa mma.',
-      pcm: 'No red flag dey at all. The registration number match NAFDAC Greenbook record well-well and the expiry date still good.',
-    };
-  }
 }
+

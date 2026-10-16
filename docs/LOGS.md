@@ -318,6 +318,26 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   4. Verified full compilation with `pnpm build` (exited 0 with static optimization in 513ms).
 - **Current State**: 100vh Hero viewport runs the interactive, high-performance `MicroSlats` fluid wave simulation background.
 
+### [Session 8] — 2026-10-16: ExplainerService Integration with GEMINI_API_KEY_2
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Built [ExplainerService](file:///Users/Cridiv/Documents/genium/backend/src/scan/explainer.service.ts) using dedicated `GEMINI_API_KEY_2` to avoid rate limit or quota collisions with the computer vision service.
+  2. Configured AI agent reasoning to generate concise, empathetic, plain English explanations grounded strictly in deterministic checks and database records.
+  3. Removed the hardcoded multilingual map (`yo`, `ha`, `ig`, `pcm`) from `ScanResponseDto` and `ScanService`, returning clean and direct `explanation` and `next_step` strings.
+  4. Verified end-to-end on `test-p.jpeg` via `POST /api/scan` returning accurate amber unverified verdict and clear next steps.
+- **Current State**: Scan endpoint fully operational with automated AI agent explanation and robust fallback resilience.
+
+### [Session 9] — 2026-10-16: Connecting /api/scan to Frontend Scanner Components
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Updated [app/app/components/scanner/types.ts](file:///Users/Cridiv/Documents/genium/app/app/components/scanner/types.ts) with `BackendScanResponse`, updated `ScanResult`, and built `normalizeBackendScanResponse` helper to map API payloads.
+  2. Enhanced [app/app/components/scanner/VerificationHUD.tsx](file:///Users/Cridiv/Documents/genium/app/app/components/scanner/VerificationHUD.tsx) to render field confidence scores, display the list of deterministic checks (`reg_exists`, `reg_matches_prod`, `dates_valid`, `carton_vs_blister`, `batch_reports`), critical registry collisions, and the Gemini AI Agent plain-language explanation and actionable next step.
+  3. Connected [app/app/components/Hero.tsx](file:///Users/Cridiv/Documents/genium/app/app/components/Hero.tsx) to dispatch live `multipart/form-data` requests to `http://localhost:5000/api/scan`.
+  4. Wired live webcam capture in [LiveCameraBox.tsx](file:///Users/Cridiv/Documents/genium/app/app/components/scanner/LiveCameraBox.tsx) to auto-submit snapped photos directly to `/api/scan`.
+  5. Verified compilation cleanly (`next build` exited 0) and verified live `/api/scan` response end-to-end.
+  6. Diagnosed vision extraction fallback: when Google AI Studio experienced temporary 503 high-demand on `gemini-3.5-flash-lite`, configured multi-model failover chain (`gemini-2.5-flash` with fallback to `gemini-3.5-flash-lite`) and multi-key failover in [ml/vision_extractor.py](file:///Users/Cridiv/Documents/genium/ml/vision_extractor.py). Verified successful live extraction on `test-p.jpeg` (`01-6685`, `Pepsi-Cola`, `Seven-Up Bottling Company Ltd.` at 95% confidence).
+- **Current State**: Frontend scanner is fully connected to the backend `/api/scan` endpoint with live camera and file upload inspection, supported by high-availability vision model failover.
+
 
 ---
 

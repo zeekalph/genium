@@ -9,13 +9,20 @@ import {
   X,
   FileImage,
   Globe2,
+  AlertCircle,
 } from "lucide-react";
 import BlurText from "./reactbits/BlurText";
 import DecryptedText from "./reactbits/DecryptedText";
 import Magnet from "./reactbits/Magnet";
 import LiveCameraBox from "./scanner/LiveCameraBox";
 import VerificationHUD from "./scanner/VerificationHUD";
-import { DEMO_PRESETS, ScanResult, LanguageKey } from "./scanner/types";
+import {
+  DEMO_PRESETS,
+  ScanResult,
+  LanguageKey,
+  BackendScanResponse,
+  normalizeBackendScanResponse,
+} from "./scanner/types";
 
 const Hero = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -26,6 +33,7 @@ const Hero = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,21 +42,76 @@ const Hero = () => {
     "Reading packaging label via Gemma 4 Vision...",
     "Querying NAFDAC Greenbook registry cross-checks...",
     "Checking crowd batch risk intelligence & geo-hotspots...",
-    "Synthesizing plain-language verdict in 5 languages...",
+    "Synthesizing plain-language verdict via AI agent...",
   ];
 
-  const handleImageSelect = (file: File) => {
+  const handleImageSelect = (file: File, autoSubmit = false) => {
     setSelectedImage(file);
     const url = URL.createObjectURL(file);
     setImagePreviewUrl(url);
     setIsLiveCameraOpen(false);
     setResult(null);
+    setScanError(null);
+
+    if (autoSubmit) {
+      scanPackagingImage(file);
+    }
   };
 
   const handleClearImage = () => {
     setSelectedImage(null);
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     setImagePreviewUrl(null);
+    setScanError(null);
+  };
+
+  const scanPackagingImage = async (file: File) => {
+    setIsAnalyzing(true);
+    setAnalysisStep(0);
+    setResult(null);
+    setScanError(null);
+
+    const stepInterval = setInterval(() => {
+      setAnalysisStep((prev) => (prev < steps.length - 1 ? prev + 1 : prev));
+    }, 1400);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      if (activeLang) {
+        formData.append("lang", activeLang);
+      }
+
+      const apiBaseUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+      const res = await fetch(`${apiBaseUrl}/api/scan`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        let msg = `Verification server returned status ${res.status}`;
+        try {
+          const errData = await res.json();
+          if (errData?.message) msg = errData.message;
+        } catch {}
+        throw new Error(msg);
+      }
+
+      const data: BackendScanResponse = await res.json();
+      const normalized = normalizeBackendScanResponse(data);
+      setResult(normalized);
+    } catch (err: any) {
+      console.error("Scan verification failed:", err);
+      setScanError(
+        err.message ||
+          "Failed to scan packaging. Ensure backend server is running on port 5000."
+      );
+    } finally {
+      clearInterval(stepInterval);
+      setIsAnalyzing(false);
+    }
   };
 
   const triggerPreset = (presetKey: string) => {
@@ -57,21 +120,25 @@ const Hero = () => {
     setSelectedImage(null);
     setImagePreviewUrl(null);
     setIsLiveCameraOpen(false);
+    setScanError(null);
     startAnalysis(preset);
   };
 
   const handleImageSubmit = () => {
-    if (!selectedImage && !result) {
-      startAnalysis(DEMO_PRESETS.coartem_genuine);
+    if (selectedImage) {
+      scanPackagingImage(selectedImage);
       return;
     }
-    startAnalysis(DEMO_PRESETS.coartem_genuine);
+    if (!result) {
+      triggerPreset("coartem_genuine");
+    }
   };
 
   const startAnalysis = (targetResult: ScanResult) => {
     setIsAnalyzing(true);
     setAnalysisStep(0);
     setResult(null);
+    setScanError(null);
 
     const stepInterval = setInterval(() => {
       setAnalysisStep((prev) => {
@@ -93,6 +160,7 @@ const Hero = () => {
     setResult(null);
     handleClearImage();
     setIsLiveCameraOpen(false);
+    setScanError(null);
   };
 
   // Keyboard shortcut listener: Enter triggers verification
@@ -146,7 +214,7 @@ const Hero = () => {
               e.preventDefault();
               setIsDragging(false);
               if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                handleImageSelect(e.dataTransfer.files[0]);
+                handleImageSelect(e.dataTransfer.files[0], true);
               }
             }}
             className={`relative rounded-[32px] sm:rounded-[38px] bg-white text-zinc-900 border border-zinc-200/90 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5),0_0_1px_rgba(255,255,255,0.4)] transition-all duration-300 ${
@@ -159,7 +227,7 @@ const Hero = () => {
             {isLiveCameraOpen ? (
               <div className="p-3 sm:p-4">
                 <LiveCameraBox
-                  onCapture={(file) => handleImageSelect(file)}
+                  onCapture={(file) => handleImageSelect(file, true)}
                   onClose={() => setIsLiveCameraOpen(false)}
                 />
               </div>
@@ -228,7 +296,7 @@ const Hero = () => {
               className="hidden"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
-                  handleImageSelect(e.target.files[0]);
+                  handleImageSelect(e.target.files[0], true);
                 }
               }}
             />
@@ -350,6 +418,25 @@ const Hero = () => {
             )}
           </div>
         </div>
+
+        {/* Scan Error Alert Banner */}
+        {scanError && (
+          <div className="mt-6 w-full max-w-3xl rounded-2xl border border-red-500/30 bg-red-950/40 p-4 text-left text-xs text-red-200 flex items-center justify-between gap-4 animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+              <div>
+                <p className="font-semibold text-white">Packaging Verification Error</p>
+                <p className="text-zinc-300 mt-0.5 leading-relaxed">{scanError}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setScanError(null)}
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer shrink-0"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* VERIFICATION OUTCOME HUD (Rendered via clean modular component) */}
         {result && (

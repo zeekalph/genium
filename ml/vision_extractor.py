@@ -126,8 +126,9 @@ class VisionExtractor:
         )
 
         models_to_try = [self.model]
-        if "gemini-3.5-flash-lite" not in models_to_try:
-            models_to_try.append("gemini-3.5-flash-lite")
+        for m in ["gemini-2.5-flash", "gemini-3.5-flash-lite"]:
+            if m not in models_to_try:
+                models_to_try.append(m)
 
         for client_idx, client in enumerate(self.clients):
             for current_model in models_to_try:
