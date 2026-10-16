@@ -1,126 +1,253 @@
-# Genium — Project Build Logs & Agent State Directory
+# Genium — Build Journey, Architecture Decisions & Session Logs
 
 > **Notice for Any AI Agent / Teammate Joining This Project:**
 > This document is the **Single Source of Truth (SSOT)** for project progress, architectural decisions, completed work, and current active tasks.
 > Before taking any action or writing code:
-> 1. Read the **Quick Context & Current System State** directly below.
-> 2. Note the repository layout: **the Next.js full-stack app lives in the `app/` subdirectory**.
-> 3. Check **Active Tasks & Next Steps** to know exactly what to build next.
-> 4. After completing your work, update the **System State**, **Task Board**, and append an entry in the **Session Log** at the bottom.
+> 1. Read the **Current Status & System Snapshot** directly below to avoid redundant work.
+> 2. Note the monorepo layout: **Next.js frontend lives in `app/`**, and **NestJS backend lives in `backend/`**.
+> 3. Check the **Architecture & Contract Baseline** to ensure any new code strictly matches agreed endpoints.
+> 4. Check **Immediate Next Steps & Active Task Board** to know exactly what to build next.
+> 5. **MANDATORY**: At the conclusion of any major implementation, update the **Session Log**, **System Snapshot**, and **Decisions Record** in this document.
 
 ---
 
-## 1. Quick Context & Current System State
+## 1. System Snapshot & Quick Status
 
-- **Project Name:** Genium ([docs/ABOUT.md](file:///C:/Users/PC/desktop/coding/genium/docs/ABOUT.md))
-- **Primary Goal:** Multilingual counterfeit drug and food verification platform for Nigeria using Gemma 4 Vision OCR, deterministic NAFDAC Greenbook cross-checks, crowdsourced batch risk intelligence, and synthetic adaptive dataset generation.
-- **Current Phase:** **Phase 1 — Skeletons & Contract Wiring**
-- **Repository Root:** `C:\Users\PC\desktop\coding\genium`
-- **Application Code Working Directory:** `C:\Users\PC\desktop\coding\genium\app`
-- **Target Deployment:** DigitalOcean (App Platform or Droplet)
-- **Supported Languages:** English (`en`), Yorùbá (`yo`), Hausa (`ha`), Igbo (`ig`), Nigerian Pidgin (`pcm`).
+| Attribute              | Current Value / State                                                                                                                     |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Product**            | **Genium** — Verify medicine & food via phone photo against NAFDAC Greenbook + crowd batch intelligence + multilingual Gemma 4 explainer. |
+| **Active Build Phase** | **Phase 1: Skeletons, Backend Core & Frontend Shell**                                                                                    |
+| **Backend Runtime**    | **NestJS 11** (TypeScript, Express platform, Node.js) in `backend/`                                                                       |
+| **Frontend Runtime**   | **Next.js 16** (App Router, React 19, Tailwind CSS v4, Lucide) in `app/`                                                                  |
+| **ML / AI Service**    | Gemma 4 Vision (extraction), Gemma 4 Multilingual (explainer: EN, YO, HA, IG, PCM), Gemma 4 Parser & Dataset Expander (JSONL) in `ml/`   |
+| **Package Manager**    | `pnpm` (Note: requires `pnpm approve-builds` for native deps like `@parcel/watcher` in `backend/`)                                      |
+| **Database**           | SQLite (dev) / Managed PostgreSQL (DigitalOcean with persistent disk)                                                                    |
+| **Hosting Target**     | DigitalOcean (Droplet or App Platform with persistent volume)                                                                             |
+| **Current Blocker**    | None. Backend & Frontend initialized; resolving git synchronization.                                                                     |
 
-### Project Layout
+### Monorepo Project Layout
+
 ```
 genium/
-├── app/                        <-- Next.js 16 Full-Stack Application (Frontend + API Routes)
+├── app/                        <-- Next.js 16 Full-Stack / Frontend (App Router, Tailwind v4, Mobile Scanner UI)
 │   ├── app/                    <-- App Router (layout.tsx, page.tsx, globals.css)
-│   │   └── api/                <-- API Route Handlers (/api/scan, /api/report, /api/hotspots, etc.)
 │   ├── public/                 <-- Static assets, mock packaging images
 │   ├── package.json            <-- Next.js 16.4.1, React 19.3.0, Tailwind v4
-│   ├── tsconfig.json           <-- TypeScript configuration
-│   └── node_modules/
+│   └── tsconfig.json           <-- Frontend TypeScript config
+├── backend/                    <-- NestJS 11 Backend API Service
+│   ├── src/                    <-- Modules: scan/, report/, batches/, dataset/, health/
+│   ├── package.json            <-- NestJS 11, TypeScript, Express platform
+│   └── tsconfig.json           <-- Backend TypeScript config
+├── ml/                         <-- ML Scripts & Data Pipelines
+│   └── scrape_greenbook.py     <-- NAFDAC Greenbook registry scraper
 ├── docs/                       <-- Documentation & Architecture
 │   ├── ABOUT.md                <-- Core concept, problem statement, pitch narrative
 │   ├── PLAN.md                 <-- 4-hour timeline, API contracts, demo checklist
 │   └── LOGS.md                 <-- (THIS FILE) Single Source of Truth & build log
+├── AGENTS.md                   <-- Workspace agent rules & directive protocols
+├── BACKEND_PLAN.md             <-- Backend execution plan
 └── LICENSE
 ```
 
 ### Environment & Toolchain
+
 - **Node.js:** v24.18.0
-- **Package Manager:** `pnpm` (v12.4.2 installed)
-- **Next.js Version:** `16.4.1` (App Router)
-- **React Version:** `19.3.0`
-- **Styling:** Tailwind CSS `v4` (`@tailwindcss/turbopack`)
-- **Commands:** Always run package commands inside `app/` (e.g. `cd app; pnpm dev` or `pnpm --dir app dev`).
+- **Package Manager:** `pnpm` (v11 / v12)
+- **Frontend Commands:** Run inside `app/` (e.g., `pnpm --dir app dev` or `cd app; pnpm dev`).
+- **Backend Commands:** Run inside `backend/` (e.g., `pnpm --dir backend start:dev` or `cd backend; pnpm start:dev`).
 
 ---
 
-## 2. Architecture & Contract Quick Reference
+## 2. API Contract Baseline (Agreed)
 
-All backend API routes live in `app/app/api/` and strictly adhere to the contracts defined in [docs/PLAN.md](file:///C:/Users/PC/desktop/coding/genium/docs/PLAN.md):
+Frontend builds against mocks/backend; backend implements these exact shapes:
 
-1. `POST /api/scan`:
-   - **Input:** `multipart/form-data` with `image` (pack/carton), optional `blister` (inner foil), `lang` (`en|yo|ha|ig|pcm`).
-   - **Output:** `{ scan_id, extracted: { reg_no, product_name, manufacturer, batch_no, expiry }, checks: [...], verdict: 'green'|'amber'|'red', explanation, next_step, batch_risk }`.
-2. `POST /api/report`:
-   - **Input:** `{ text, batch_no?, product_hint? }`.
-   - **Output:** `{ report_id, parsed: { batch_number, anomaly_type, severity, standardized_summary }, batch_risk: { batch_no, reports, score, level }, dataset_rows_added }`.
-3. `GET /api/hotspots`:
-   - **Output:** Array of batches with report count, risk level, and regional summary for live dashboard polling (every 2s).
-4. `GET /api/dataset`:
-   - **Output:** Live generated JSONL training records for the side-drawer.
-5. `GET /api/dataset/export`:
-   - **Output:** File download stream (`genium_dataset.jsonl`).
+### 2.1. `POST /api/scan`
 
-### 3-Tier Verdict System
-- **Green:** Label matches NAFDAC Greenbook, carton matches blister, 0 adverse batch reports.
+- **Request**: `multipart/form-data` with `image` (carton, required), `blister` (inner strip, optional), `lang` (`en` | `yo` | `ha` | `ig` | `pcm`)
+- **Response**:
+
+```json
+{
+  "scan_id": "sc_001",
+  "extracted": {
+    "reg_no": { "value": "A4-100137", "confidence": 0.97 },
+    "product_name": { "value": "Augmentin", "confidence": 0.95 },
+    "manufacturer": { "value": "Unknown Pharma Ltd", "confidence": 0.88 },
+    "batch_no": { "value": "B24091", "confidence": 0.91 },
+    "expiry": { "value": "2027-08", "confidence": 0.93 }
+  },
+  "checks": [
+    { "id": "reg_exists", "pass": true, "detail": "Number found in registry" },
+    {
+      "id": "reg_matches_prod",
+      "pass": false,
+      "detail": "Number belongs to Emzor Paracetamol"
+    },
+    { "id": "dates_valid", "pass": true, "detail": "Expiry in the future" },
+    {
+      "id": "carton_vs_blister",
+      "pass": null,
+      "detail": "No blister photo supplied"
+    },
+    { "id": "batch_reports", "pass": true, "detail": "0 reports on this batch" }
+  ],
+  "verdict": "red",
+  "explanation": "Text in the selected language",
+  "explanations": {
+    "en": "English explanation",
+    "yo": "Yoruba explanation",
+    "ha": "Hausa explanation",
+    "ig": "Igbo explanation",
+    "pcm": "Pidgin explanation"
+  },
+  "next_step": "Show this pack to a pharmacist or report to NAFDAC",
+  "batch_risk": { "batch_no": "B24091", "reports": 0, "score": 0.1 }
+}
+```
+
+### 2.2. `POST /api/report`
+
+- **Request**: `{ "text": "free text", "batch_no": "B24091 (opt)", "product_hint": "opt", "state": "Lagos (opt)" }`
+- **Response**:
+
+```json
+{
+  "report_id": "rp_001",
+  "parsed": {
+    "batch_number": "B24091",
+    "anomaly_type": "DISSOLUTION_OR_TASTE_FAILURE",
+    "severity": "HIGH",
+    "standardized_summary": "User reports tablet crumbles into chalky powder."
+  },
+  "batch_risk": {
+    "batch_no": "B24091",
+    "reports": 3,
+    "score": 0.82,
+    "level": "high"
+  },
+  "dataset_rows_added": 3
+}
+```
+
+### 2.3. Dashboard & Intel Endpoints
+
+- `GET /api/hotspots`: Returns batches grouped by state/region with report counts, risk score, and risk level (`low` | `medium` | `high`).
+- `GET /api/dataset`: Live synthetic/parsed JSONL training rows for dataset drawer.
+- `GET /api/dataset/export`: Streams `genium_dataset.jsonl` export for download.
+- `GET /api/health`: Healthcheck endpoint for DigitalOcean deployment monitoring.
+
+### 2.4. 3-Tier Verdict System
+
+- **Green:** Label matches NAFDAC Greenbook, carton matches blister, 0 adverse batch reports ("No red flags found" — never claim chemical purity).
 - **Amber:** Label matches Greenbook, but batch has crowd-reported quality/anomaly flags or rapid scan anomalies.
 - **Red:** Number doesn't exist, belongs to another product/brand, or carton vs. blister contradicts.
 
 ---
 
-## 3. Active Task Board
+## 3. Database Schema Blueprint
 
-| Task | Status | Owner / Notes |
-| :--- | :---: | :--- |
-| Project Log (`docs/LOGS.md`) initialization | **DONE** | Comprehensive SSOT for zero-conflict multi-agent continuity |
-| Next.js App Discovery & Environment Sync | **DONE** | App initialized in `app/` with Next.js 16, React 19, Tailwind v4 |
-| Curate NAFDAC Greenbook snapshot (`app/data/greenbook_snapshot.json`) | **READY** | 50 high-frequency Nigerian medicines & food products |
-| Implement API Route Stubs (`app/app/api/...`) | **READY** | `/api/scan`, `/api/report`, `/api/hotspots`, `/api/dataset`, `/api/dataset/export` |
-| Install UI Utilities (`lucide-react`, `clsx`, `tailwind-merge`) | **QUEUED** | Needed for icons and UI styling |
-| Build Mobile-First Scan & Live Dashboard Layout | **QUEUED** | Split view: Mobile phone frame (left) + Hotspot/Dataset Dashboard (right) |
-| Multilingual Explainer & Gemma 4 Prompt Service | **QUEUED** | EN, Yoruba, Hausa, Igbo, Pidgin output formatting |
+1. **`products`**: `reg_no` (PK, normalized uppercase), `name`, `manufacturer`, `category`, `description`, `mas_required`, `source`
+2. **`scans`**: `id` (PK), `created_at`, `image_hash`, `extracted` (JSON), `checks` (JSON), `verdict`, `lang`, `latency_ms`
+3. **`reports`**: `id` (PK), `text`, `parsed` (JSON), `batch_no`, `state`, `pharmacist_flag`, `created_at`
+4. **`batches`**: `batch_no` (PK), `product_ref`, `report_count`, `score`, `level` (`green`|`amber`|`red`), `state`, `updated_at`
+5. **`dataset_rows`**: `id` (PK), `instruction`, `input`, `output`, `lang`, `source` (`gemma-synthetic`), `created_at`
 
 ---
 
 ## 4. Architectural Decision Records (ADRs)
 
-### ADR 001: Next.js App Router in `app/` Directory
-- **Date:** 2026-10-16
-- **Context:** The repository has a dedicated `app/` folder containing the Next.js 16 project with React 19 and Tailwind v4.
-- **Decision:** All web application code, API route handlers (`app/app/api/`), components, and public assets must remain in `app/`. Root is reserved for docs, global git config, and repo-level tooling.
-- **Consequence:** Future agents and teammates must execute build/dev commands targeting `app/` and avoid re-initializing Next.js at the root.
+### ADR-001: Backend Framework Selection (NestJS 11)
+- **Date**: 2026-10-16
+- **Decision**: NestJS 11 with TypeScript over plain Express or FastAPI in `backend/`.
+- **Context**: The team needed modular architecture, typed dependency injection, robust DTO/class-validator validation, and clean structure for multi-step pipelines (scan validation, Gemma calls, registry checks, batch risk engine).
+- **Consequences**: Structured modules (`scan/`, `report/`, `registry/`, `batches/`, `dataset/`), fast cold starts, strong typing.
 
-### ADR 002: Multi-Agent Continuity & State Logging
-- **Date:** 2026-10-16
-- **Context:** Multiple AI agent sessions or human teammates may collaborate concurrently or sequentially. Reparsing raw code or starting from scratch wastes tokens and causes merge conflicts.
-- **Decision:** Maintain `docs/LOGS.md` with:
-  1. Updated System State & Task Board at the top.
-  2. Concrete ADRs for all non-trivial decisions.
-  3. Reverse-chronological session logs with modified files and exact next steps.
+### ADR-002: Frontend Framework Selection (Next.js 16 in `app/`)
+- **Date**: 2026-10-16
+- **Decision**: Next.js 16 with React 19 and Tailwind CSS v4 in `app/`.
+- **Context**: High-performance UI rendering, split-view desktop dashboard + mobile-first scanner, fast local dev with Turbopack.
+- **Consequences**: Frontend code is strictly encapsulated in `app/`, keeping the root clean for monorepo docs and tooling.
+
+### ADR-003: Package Manager & Native Dependency Resolution
+- **Date**: 2026-10-16
+- **Decision**: pnpm with approved build scripts.
+- **Context**: `nest new backend` exited with a script execution block due to pnpm v11's security model for native dependencies (`@parcel/watcher`).
+- **Resolution**: Ran `pnpm approve-builds --all` in `backend/`. Build and lockfile verified cleanly.
+
+### ADR-004: All-Language Explanations in Single Scan Payload
+- **Date**: 2026-10-16
+- **Decision**: Include `explanations` map with all 5 languages (`en`, `yo`, `ha`, `ig`, `pcm`) alongside the active `explanation` string in `POST /api/scan`.
+- **Rationale**: Enables zero-latency, offline-capable language switching in the UI without triggering a second LLM inference call or waiting for network round-trips.
+
+### ADR-005: State Field on Reports for Real-Time Hotspot Mapping
+- **Date**: 2026-10-16
+- **Decision**: Make `state` an explicit (optional) field on `POST /api/report`.
+- **Rationale**: Powers the `GET /api/hotspots` dashboard query directly without needing expensive geolocation reverse-geocoding on free text.
+
+### ADR-006: Deterministic Fallback & Crash Prevention Policy
+- **Date**: 2026-10-16
+- **Decision**: Never allow a Gemma API timeout or JSON parsing error to crash an endpoint or return a 500 error.
+- **Rationale**: For demo & production stability, any LLM timeout (12s limit) or schema invalidity triggers a canned fallback:
+  - Scan extraction failure -> fallback to `"could not read label with sufficient clarity"` verdict.
+  - Report parser failure -> fallback to `anomaly_type: "OTHER"`.
+
+### ADR-007: Multi-Agent Continuity & State Logging
+- **Date**: 2026-10-16
+- **Decision**: Maintain `docs/LOGS.md` with updated system state, concrete ADRs, and session logs, paired with `AGENTS.md` instructions.
+- **Rationale**: Avoids merge conflicts, re-asking foundational questions, and token burn across multiple agents and teammates.
 
 ---
 
 ## 5. Chronological Session Logs
 
-### [Session 1] — 2026-10-16: Architecture Setup & Multi-Agent Protocol
-- **Author/Agent:** Antigravity AI Assistant
-- **Actions Taken:**
-  - Audited repository: [docs/ABOUT.md](file:///C:/Users/PC/desktop/coding/genium/docs/ABOUT.md), [docs/PLAN.md](file:///C:/Users/PC/desktop/coding/genium/docs/PLAN.md), and confirmed project scope.
-  - Audited local toolchain: Node.js `v24.18.0`, pnpm `12.4.2`, Python `3.13.3`, `uv` `0.12.5`.
-  - Discovered existing Next.js 16.4.1 + React 19 + Tailwind v4 project located in `app/`.
-  - Documented directory structure, operational commands, and API contracts in [docs/LOGS.md](file:///C:/Users/PC/desktop/coding/genium/docs/LOGS.md).
-- **Files Created / Modified:**
-  - `docs/LOGS.md` (Created SSOT and agent continuity manual)
-- **Current Blockers:** None.
-- **Immediate Next Steps for Any Agent:**
-  1. Create `app/data/greenbook_snapshot.json` with 50 curated NAFDAC medicine/food records.
-  2. Implement mock-contract API route stubs in `app/app/api/`:
-     - `app/app/api/scan/route.ts`
-     - `app/app/api/report/route.ts`
-     - `app/app/api/hotspots/route.ts`
-     - `app/app/api/dataset/route.ts`
-     - `app/app/api/dataset/export/route.ts`
-  3. Build the split-view dashboard and mobile scanner UI in `app/app/page.tsx`.
+### [Session 0] — 2026-10-16: Backend Setup & Workspace Alignment
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Reviewed `docs/ABOUT.md`, `docs/PLAN.md`, and `BACKEND_PLAN.md`.
+  2. Scaffolded backend using NestJS 11 in `backend/`.
+  3. Resolved pnpm v11 script execution approval block (`pnpm approve-builds --all`).
+  4. Verified `pnpm install --strict-peer-dependencies=false` and `pnpm build` complete cleanly with exit code 0.
+  5. Removed nested `backend/.git` repository so the root repository tracks the workspace cleanly.
+  6. Established `docs/LOGS.md` as the unified project memory and log.
+  7. Created workspace memory rules in `AGENTS.md` (including explicit rule to only follow user direction).
+  8. Synchronized with updated roles in `docs/PLAN.md`.
+- **Current State**: Backend environment healthy, dependencies installed and built, ready for module scaffolding and endpoint implementation.
+
+### [Session 1] — 2026-10-16: Frontend Architecture & Monorepo Cohesion
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Audited repository structure: Next.js 16 in `app/`, NestJS 11 in `backend/`, scraper in `ml/`.
+  2. Verified Next.js 16 + React 19 + Tailwind v4 setup in `app/`.
+  3. Reconciled and merged documentation in `docs/LOGS.md` to reflect unified full-stack architecture.
+- **Current State**: Both `app/` and `backend/` are cleanly configured and aligned with agreed contracts.
+
+---
+
+## 6. Known Gotchas & Constraints
+
+1. **pnpm v11 Script Approval**: If adding packages with C/C++ or native build scripts in `backend/`, execute `pnpm approve-builds` or configure approval.
+2. **Persistence on DigitalOcean**: When deploying to DigitalOcean, ensure SQLite database is stored on a persistent mounted volume or migrate connection to Managed PostgreSQL to prevent data loss on container redeploys.
+3. **Demo Cache**: Prepare pre-computed responses for the 3 demo pack images (genuine, mismatched registration, crowd-flagged batch) so presentation runs flawlessly even on venue Wi-Fi drops.
+4. **Language Validation**: Translations for Yoruba, Hausa, Igbo, and Pidgin must be validated with native speaker sanity checks.
+
+---
+
+## 7. Active Task Board & Immediate Next Steps
+
+### Backend Tasks (`backend/`)
+- [ ] Create NestJS Modules:
+  - `HealthModule` (`/api/health`)
+  - `ScanModule` (`/api/scan`)
+  - `ReportModule` (`/api/report`)
+  - `BatchesModule` (`/api/hotspots`)
+  - `DatasetModule` (`/api/dataset`, `/api/dataset/export`)
+- [ ] Enable CORS for frontend development (`localhost:3000`, `localhost:5173`) and production URLs.
+- [ ] Set up global API prefix (`/api`).
+- [ ] Implement contract-shaped mock responses for all 5 endpoints so frontend development can unblock immediately.
+- [ ] Set up database service (Prisma / TypeORM / Better-SQLite3) with the 5 core tables.
+
+### Frontend Tasks (`app/`)
+- [ ] Curate NAFDAC Greenbook snapshot (`app/data/greenbook_snapshot.json`) with 50 high-frequency Nigerian medicines & foods.
+- [ ] Build split-view layout: Mobile scanner simulator (left) + Live Risk & Hotspot Dashboard (right).
+- [ ] Connect language selector (`en`, `yo`, `ha`, `ig`, `pcm`) to toggle multi-language verdict display instantly.
