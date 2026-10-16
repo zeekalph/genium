@@ -241,6 +241,15 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   6. Completed and checked off Hour 0:30–1:30 milestones in [ml/checklist.md](file:///c:/Users/USER/Documents/GitHub/genium/ml/checklist.md).
 - **Current State**: Vision extraction engine v1 operational, tested, and contract handoff artifact ready for backend integration.
 
+### [Session 4] — 2026-10-16: FastAPI ML Vision Service Microservice (`ml/main.py`)
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Configured FastAPI microservice in `ml/main.py` exposing `POST /extract` and `GET /health`.
+  2. Implemented multipart image ingestion accepting primary (`image`/`file`) and optional secondary `blister` photos.
+  3. Integrated `VisionExtractor` pipeline with robust non-crashing fallback logic and latency tracking.
+  4. Verified healthcheck and error handling using Starlette TestClient (returns HTTP 200 with calibrated schema even on degraded input).
+- **Current State**: `ml/main.py` active and ready to be called over HTTP by the NestJS backend `ScanService`.
+
 ---
 
 ## 6. Known Gotchas & Constraints
