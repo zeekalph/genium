@@ -149,12 +149,10 @@ const Hero = () => {
                 handleImageSelect(e.dataTransfer.files[0]);
               }
             }}
-            className={`relative rounded-3xl border transition-all duration-300 ${
+            className={`relative rounded-[32px] sm:rounded-[38px] bg-white text-zinc-900 border border-zinc-200/90 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5),0_0_1px_rgba(255,255,255,0.4)] transition-all duration-300 ${
               isDragging
-                ? "border-sky-400 bg-sky-950/20 shadow-[0_0_30px_rgba(14,165,233,0.2)]"
-                : isAnalyzing
-                  ? "border-sky-500/50 shadow-[0_0_40px_rgba(14,165,233,0.15)] bg-zinc-950/95"
-                  : "border-white/10 bg-zinc-950/80 shadow-2xl backdrop-blur-2xl hover:border-white/20"
+                ? "ring-4 ring-sky-500/20 border-sky-400 bg-zinc-50/95"
+                : "hover:shadow-[0_25px_60px_-10px_rgba(0,0,0,0.6)]"
             }`}
           >
             {/* Live Camera Feed inside the box if active */}
@@ -167,73 +165,56 @@ const Hero = () => {
               </div>
             ) : (
               /* Main Interactive Image Zone */
-              <div className="p-6 sm:p-8 text-center flex flex-col items-center justify-center min-h-[140px]">
+              <div>
                 {selectedImage && imagePreviewUrl ? (
                   /* Image Attached Preview Card */
-                  <div className="w-full flex items-center justify-between gap-4 rounded-2xl border border-sky-500/30 bg-sky-950/30 p-3.5 sm:p-4 text-left">
-                    <div className="flex items-center gap-3.5">
-                      <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/10 bg-black/60 shrink-0">
-                        <Image
-                          src={imagePreviewUrl}
-                          alt="Pack preview"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-white max-w-[220px] sm:max-w-xs truncate">
-                            {selectedImage.name}
-                          </span>
-                          <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-[10px] font-mono text-sky-300 border border-sky-500/30">
-                            {(selectedImage.size / 1024).toFixed(0)} KB
-                          </span>
+                  <div className="px-5 pt-5 pb-3 sm:px-7 sm:pt-7 sm:pb-4">
+                    <div className="w-full flex items-center justify-between gap-4 rounded-2xl border border-zinc-200/90 bg-zinc-50/90 p-3.5 sm:p-4 text-left shadow-xs">
+                      <div className="flex items-center gap-3.5">
+                        <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-zinc-200 bg-white shrink-0 shadow-xs">
+                          <Image
+                            src={imagePreviewUrl}
+                            alt="Pack preview"
+                            fill
+                            className="object-cover"
+                          />
                         </div>
-                        <p className="text-xs text-zinc-400 mt-0.5">
-                          Pack photo ready. Press{" "}
-                          <span className="text-white font-mono font-medium">
-                            Enter
-                          </span>{" "}
-                          or click arrow to verify.
-                        </p>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-zinc-900 max-w-[220px] sm:max-w-xs truncate">
+                              {selectedImage.name}
+                            </span>
+                            <span className="rounded-full bg-zinc-200/80 px-2 py-0.5 text-[10px] font-mono font-medium text-zinc-700">
+                              {(selectedImage.size / 1024).toFixed(0)} KB
+                            </span>
+                          </div>
+                          <p className="text-xs text-zinc-500 mt-0.5">
+                            Photo ready. Press <span className="font-semibold text-zinc-900 font-mono">Enter</span> or click arrow to verify.
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    <button
-                      onClick={handleClearImage}
-                      className="rounded-full p-2 text-zinc-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-                      title="Remove image"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                      <button
+                        onClick={handleClearImage}
+                        className="rounded-full p-2 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 transition-colors cursor-pointer"
+                        title="Remove image"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  /* Empty Dropzone State with Live Camera & File Triggers */
-                  <div className="flex flex-col items-center justify-center py-2">
-                    <div className="flex items-center gap-3 mb-3">
-                      <button
-                        type="button"
-                        onClick={() => setIsLiveCameraOpen(true)}
-                        className="flex items-center gap-2 rounded-xl border border-sky-500/30 bg-sky-950/40 px-4 py-2 text-xs sm:text-sm font-medium text-white transition-all hover:bg-sky-900/50 hover:border-sky-400 active:scale-95 cursor-pointer shadow-sm"
-                      >
-                        <Camera className="h-4 w-4 text-sky-400" />
-                        <span>Open Live Camera</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs sm:text-sm font-medium text-white transition-all hover:bg-white/10 hover:border-white/20 active:scale-95 cursor-pointer shadow-sm"
-                      >
-                        <Paperclip className="h-4 w-4 text-emerald-400" />
-                        <span>Attach Pack Photo</span>
-                      </button>
-                    </div>
-
-                    <p className="text-xs text-zinc-400 font-normal">
-                      Drag and drop carton or blister packaging photo here, or
-                      use demo presets below
-                    </p>
+                  /* Clean Kraft Minimalist Placeholder (Click/Drop to upload) */
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-6 pt-7 pb-4 sm:px-8 sm:pt-8 sm:pb-5 text-left cursor-pointer flex flex-col justify-start min-h-[110px] sm:min-h-[120px] select-none group"
+                  >
+                    <span className="text-zinc-400 font-normal text-lg sm:text-xl tracking-tight transition-colors group-hover:text-zinc-500">
+                      Drop packaging photo or scan to verify...
+                    </span>
+                    <span className="text-xs text-zinc-400/80 font-normal mt-2">
+                      Cross-checks NAFDAC Greenbook, batch registries & packaging authenticity
+                    </span>
                   </div>
                 )}
               </div>
@@ -252,80 +233,76 @@ const Hero = () => {
               }}
             />
 
-            {/* Bottom Toolbar inside the box (Kraft screenshot layout) */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] px-4 py-3 sm:px-5">
+            {/* Bottom Toolbar inside the box (Matching Kraft design) */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 pb-4 sm:pb-5 pt-1">
               {/* Left Action Buttons & Preset Chips */}
               <div className="flex flex-wrap items-center gap-2">
-                {/* Live Camera Toggle Button */}
-                <button
-                  type="button"
-                  onClick={() => setIsLiveCameraOpen((prev) => !prev)}
-                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-                    isLiveCameraOpen
-                      ? "border-sky-400 bg-sky-950/60 text-sky-200"
-                      : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
-                  }`}
-                  title="Toggle Live Web Camera"
-                >
-                  <Camera className="h-3.5 w-3.5 text-sky-400" />
-                  <span className="hidden sm:inline">
-                    {isLiveCameraOpen ? "Close Camera" : "Live Camera"}
-                  </span>
-                </button>
-
-                {/* Quick Attach action */}
+                {/* Paperclip circular button */}
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
-                  title="Attach file from device"
+                  className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200/80 text-zinc-600 hover:text-zinc-900 transition-all active:scale-95 cursor-pointer shadow-xs"
+                  title="Attach packaging photo from device"
                 >
-                  <Paperclip className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="hidden sm:inline">Attach</span>
+                  <Paperclip className="h-4 w-4" />
                 </button>
 
-                {/* Quick Presets for Demo */}
+                {/* Camera circular button */}
+                <button
+                  type="button"
+                  onClick={() => setIsLiveCameraOpen((prev) => !prev)}
+                  className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full transition-all active:scale-95 cursor-pointer shadow-xs ${
+                    isLiveCameraOpen
+                      ? "bg-zinc-900 text-white"
+                      : "bg-zinc-100 hover:bg-zinc-200/80 text-zinc-600 hover:text-zinc-900"
+                  }`}
+                  title={isLiveCameraOpen ? "Close Live Camera" : "Open Live Web Camera"}
+                >
+                  <Camera className="h-4 w-4" />
+                </button>
+
+                {/* Preset Pills (Kraft style like 'Create Design', 'Wireframe') */}
                 <button
                   type="button"
                   onClick={() => triggerPreset("augmentin_clone")}
-                  className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-950/30 px-3 py-1.5 text-xs font-medium text-red-300 transition-colors hover:bg-red-900/40 hover:border-red-500/40 cursor-pointer"
+                  className="flex items-center gap-2 rounded-full bg-zinc-100 hover:bg-zinc-200/80 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-zinc-700 hover:text-zinc-900 transition-all cursor-pointer active:scale-95 shadow-xs"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                  <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
                   <span>Augmentin Clone</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => triggerPreset("coartem_genuine")}
-                  className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-950/30 px-3 py-1.5 text-xs font-medium text-emerald-300 transition-colors hover:bg-emerald-900/40 hover:border-emerald-500/40 cursor-pointer"
+                  className="flex items-center gap-2 rounded-full bg-zinc-100 hover:bg-zinc-200/80 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-zinc-700 hover:text-zinc-900 transition-all cursor-pointer active:scale-95 shadow-xs"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
                   <span>Coartem Genuine</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => triggerPreset("amatem_amber")}
-                  className="hidden md:flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-950/30 px-3 py-1.5 text-xs font-medium text-amber-300 transition-colors hover:bg-amber-900/40 hover:border-amber-500/40 cursor-pointer"
+                  className="hidden md:flex items-center gap-2 rounded-full bg-zinc-100 hover:bg-zinc-200/80 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-zinc-700 hover:text-zinc-900 transition-all cursor-pointer active:scale-95 shadow-xs"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
                   <span>Chalky Batch</span>
                 </button>
               </div>
 
-              {/* Right: Language switch + Circular Submit Arrow */}
+              {/* Right: Language switch + Solid Black Circular Submit Arrow (Kraft style) */}
               <div className="flex items-center gap-3 ml-auto">
                 {/* Language switcher pill */}
-                <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 p-0.5 text-xs text-zinc-400">
-                  <Globe2 className="h-3 w-3 ml-1.5 text-zinc-400 hidden sm:inline" />
+                <div className="flex items-center gap-1 rounded-full bg-zinc-100 p-1 text-xs text-zinc-500 shadow-xs">
+                  <Globe2 className="h-3.5 w-3.5 ml-1 text-zinc-400 hidden sm:inline" />
                   {(["en", "yo", "pcm"] as LanguageKey[]).map((lang) => (
                     <button
                       key={lang}
                       onClick={() => setActiveLang(lang)}
                       className={`rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
                         activeLang === lang
-                          ? "bg-white/20 text-white font-semibold"
-                          : "text-zinc-400 hover:text-zinc-200"
+                          ? "bg-white text-zinc-900 font-semibold shadow-xs"
+                          : "text-zinc-500 hover:text-zinc-800"
                       }`}
                     >
                       {lang.toUpperCase()}
@@ -333,19 +310,19 @@ const Hero = () => {
                   ))}
                 </div>
 
-                {/* Circular Enter/Submit Button */}
-                <Magnet padding={30} magnetStrength={3}>
+                {/* Solid Black Circular Button with ArrowRight (Identical to Kraft) */}
+                <Magnet padding={25} magnetStrength={2}>
                   <button
                     type="button"
                     onClick={handleImageSubmit}
                     disabled={isAnalyzing}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-zinc-950 shadow-md transition-all hover:bg-zinc-200 active:scale-95 disabled:opacity-50 cursor-pointer"
+                    className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-black text-white hover:bg-zinc-800 shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                     title="Verify pack"
                   >
                     {isAnalyzing ? (
-                      <span className="h-4 w-4 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />
+                      <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
                     ) : (
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
                     )}
                   </button>
                 </Magnet>
@@ -354,19 +331,19 @@ const Hero = () => {
 
             {/* Thinking / Analyzing Minimalistic Status Bar */}
             {isAnalyzing && (
-              <div className="border-t border-sky-500/20 bg-sky-950/30 px-5 py-3 rounded-b-3xl flex items-center justify-between text-xs text-sky-300">
+              <div className="border-t border-zinc-100 bg-zinc-50/90 px-6 py-3 rounded-b-[32px] sm:rounded-b-[38px] flex items-center justify-between text-xs text-zinc-600">
                 <div className="flex items-center gap-2.5">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-600" />
                   </span>
                   <DecryptedText
                     text={steps[analysisStep]}
                     speed={25}
-                    className="font-mono text-xs text-sky-200"
+                    className="font-mono text-xs text-zinc-800 font-medium"
                   />
                 </div>
-                <span className="font-mono text-[11px] text-sky-400/80">
+                <span className="font-mono text-[11px] text-zinc-500 font-medium">
                   Step {analysisStep + 1}/4
                 </span>
               </div>
