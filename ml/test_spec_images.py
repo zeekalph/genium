@@ -4,7 +4,7 @@ import time
 from vision_extractor import VisionExtractor
 
 IMAGES_DIR = os.path.join(os.path.dirname(__file__), "images")
-extractor = VisionExtractor(timeout=45)
+extractor = VisionExtractor()
 
 print(f"Scanning images in {IMAGES_DIR}...")
 for fname in sorted(os.listdir(IMAGES_DIR)):

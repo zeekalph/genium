@@ -109,6 +109,7 @@ async def extract_packaging(
                 "manufacturer": {"value": None, "confidence": 0.0},
                 "batch_no": {"value": None, "confidence": 0.0},
                 "expiry": {"value": None, "confidence": 0.0},
+                "barcode": {"detected": False, "barcodes": [], "link_resolution": None},
             },
             "blister_extracted": None,
             "latency_ms": elapsed_ms,

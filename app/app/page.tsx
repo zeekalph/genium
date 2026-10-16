@@ -1,29 +1,35 @@
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-import GradientASCII from "./components/reactbits/GradientASCII";
+import MicroSlats from "./components/reactbits/MicroSlats";
 import Footer from "./components/Footer";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white selection:bg-sky-500 selection:text-white">
-      {/* 100vh Viewport Section: Navbar + Hero with GradientASCII Background */}
+      {/* 100vh Viewport Section: Navbar + Hero with MicroSlats Fluid Background */}
       <section className="relative min-h-screen w-full overflow-hidden flex flex-col">
-        {/* Background Gradient ASCII (Strictly for this 100vh Navbar + Hero viewport) */}
+        {/* Background MicroSlats (Strictly for this 100vh Navbar + Hero viewport) */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-          <GradientASCII
-            colors={["#0284c7", "#0ea5e9", "#059669", "#10b981", "#38bdf8"]}
-            shape="rise"
-            cellSize={14}
-            density={0.75}
-            glow={0.45}
-            gradientOpacity={0.85}
-            mouseInteraction={true}
-            flicker={0.2}
-            speed={0.85}
+          <MicroSlats
+            preset="swell"
+            color="#0284c7"
+            glintColor="#38bdf8"
+            backgroundColor="#020617"
+            slatWidth={9}
+            slatHeight={26}
+            gap={3}
+            roundness={0.8}
+            interactive={true}
+            cursorStrength={1.2}
+            cursorSize={45}
+            swirl={0.3}
+            trail={1.4}
+            lean={0.15}
+            intro={true}
             className="h-full w-full"
           />
-          {/* Subtle edge vignette that lets the glowing ASCII shine through */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70 pointer-events-none" />
+          {/* Subtle edge vignette that lets the fluid slats shine through */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/75 pointer-events-none" />
         </div>
 
         {/* Content layer (Navbar + Hero) */}

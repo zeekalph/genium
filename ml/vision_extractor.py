@@ -9,13 +9,9 @@ import json
 import os
 import re
 from typing import Any, Dict, Optional, Union
-# pyrefly: ignore[missing-import]
 from dotenv import load_dotenv
-# pyrefly: ignore[missing-import]
 from google import genai
-# pyrefly: ignore[missing-import]
 from google.genai import types
-# pyrefly: ignore[missing-import]
 from PIL import Image
 
 from barcode_resolver import BarcodeResolver
@@ -54,12 +50,21 @@ class VisionExtractor:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: Optional[str] = None
+        fallback_api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        timeout: Optional[int] = None
     ):
-        self.api_key = api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        self.timeout = timeout
+        primary_key = api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        fallback_key = fallback_api_key or os.getenv("GOOGLE_FALLBACK_API_KEY") or os.getenv("GEMINI_FALLBACK_API_KEY")
+
+        self.api_keys = [k for k in [primary_key, fallback_key] if k]
         self.model = model or os.getenv("GOOGLE_VISION_MODEL", "gemini-2.5-flash")
-        self.client = genai.Client(api_key=self.api_key)
-        self.barcode_resolver = BarcodeResolver(api_key=self.api_key, model=self.model)
+        
+        # Initialize Google GenAI clients for failover
+        self.clients = [genai.Client(api_key=k) for k in self.api_keys]
+        self.client = self.clients[0] if self.clients else None
+        self.barcode_resolver = BarcodeResolver(api_key=primary_key, fallback_api_key=fallback_key, model=self.model)
 
     def _prepare_image(self, image_input: Union[str, Image.Image, bytes]) -> Image.Image:
         """Loads and prepares PIL Image."""
@@ -119,60 +124,68 @@ class VisionExtractor:
             "}"
         )
 
-        try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[img, prompt],
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.0
-                )
-            )
-
-            raw_text = response.text.strip()
-            parsed = json.loads(raw_text)
-
-            validated: Dict[str, Any] = {}
-            for field in ["reg_no", "product_name", "manufacturer", "batch_no", "expiry"]:
-                field_data = parsed.get(field, {})
-                if isinstance(field_data, dict):
-                    val = field_data.get("value")
-                    conf = float(field_data.get("confidence", 0.0))
-                elif isinstance(field_data, (str, type(None))):
-                    val = field_data
-                    conf = 0.85 if val is not None else 0.0
-                else:
-                    val = str(field_data)
-                    conf = 0.50
-
-                # Clean strings indicating absent values
-                if isinstance(val, str):
-                    val = val.strip()
-                    if val.lower() in ("not visible", "null", "none", "n/a", "unknown", ""):
-                        val = None
-                        conf = 0.0
-
-                # Sanitize reg_no
-                if field == "reg_no" and val:
-                    val = re.sub(r"(?i)^(nafdac\s*(reg(\.|\s*no)?:?|nrn:?))\s*", "", str(val)).strip()
-
-                validated[field] = {
-                    "value": str(val).strip() if val is not None else None,
-                    "confidence": round(max(0.0, min(1.0, conf)), 2)
-                }
-
-            # Scan barcodes and resolve any redirected verification links
+        for client_idx, client in enumerate(self.clients):
             try:
-                validated["barcode"] = self.barcode_resolver.scan_and_resolve(img)
+                response = client.models.generate_content(
+                    model=self.model,
+                    contents=[img, prompt],
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        temperature=0.0
+                    )
+                )
+
+                raw_text = response.text.strip()
+                parsed = json.loads(raw_text)
+
+                validated: Dict[str, Any] = {}
+                for field in ["reg_no", "product_name", "manufacturer", "batch_no", "expiry"]:
+                    field_data = parsed.get(field, {})
+                    if isinstance(field_data, dict):
+                        val = field_data.get("value")
+                        conf = float(field_data.get("confidence", 0.0))
+                    elif isinstance(field_data, (str, type(None))):
+                        val = field_data
+                        conf = 0.85 if val is not None else 0.0
+                    else:
+                        val = str(field_data)
+                        conf = 0.50
+
+                    # Clean strings indicating absent values
+                    if isinstance(val, str):
+                        val = val.strip()
+                        if val.lower() in ("not visible", "null", "none", "n/a", "unknown", ""):
+                            val = None
+                            conf = 0.0
+
+                    # Sanitize reg_no
+                    if field == "reg_no" and val:
+                        val = re.sub(r"(?i)^(nafdac\s*(reg(\.|\s*no)?:?|nrn:?))\s*", "", str(val)).strip()
+
+                    validated[field] = {
+                        "value": str(val).strip() if val is not None else None,
+                        "confidence": round(max(0.0, min(1.0, conf)), 2)
+                    }
+
+                # Scan barcodes and resolve any redirected verification links
+                try:
+                    validated["barcode"] = self.barcode_resolver.scan_and_resolve(img)
+                except Exception as e:
+                    print(f"[VisionExtractor] Barcode scan error: {e}")
+                    validated["barcode"] = {"detected": False, "barcodes": [], "link_resolution": None}
+
+                return validated
+
             except Exception as e:
-                print(f"[VisionExtractor] Barcode scan error: {e}")
-                validated["barcode"] = {"detected": False, "barcodes": [], "link_resolution": None}
+                # If there is another client in reserve, silently retry with the fallback key
+                if client_idx < len(self.clients) - 1:
+                    print(f"[VisionExtractor] Primary Google AI Studio key encountered error ({type(e).__name__}). Seamlessly retrying with fallback API key...")
+                    continue
+                else:
+                    print(f"[VisionExtractor] All Google AI Studio API keys exhausted. Error: {e}")
+                    return default_fallback
 
-            return validated
-
-        except Exception as e:
-            print(f"[VisionExtractor] Extraction error: {e}")
-            return default_fallback
+        return default_fallback
 
 
 if __name__ == "__main__":

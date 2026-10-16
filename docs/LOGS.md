@@ -3,6 +3,7 @@
 > **Notice for Any AI Agent / Teammate Joining This Project:**
 > This document is the **Single Source of Truth (SSOT)** for project progress, architectural decisions, completed work, and current active tasks.
 > Before taking any action or writing code:
+>
 > 1. Read the **Current Status & System Snapshot** directly below to avoid redundant work.
 > 2. Note the monorepo layout: **Next.js frontend lives in `app/`**, and **NestJS backend lives in `backend/`**.
 > 3. Check the **Architecture & Contract Baseline** to ensure any new code strictly matches agreed endpoints.
@@ -16,14 +17,14 @@
 | Attribute              | Current Value / State                                                                                                                     |
 | :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
 | **Product**            | **Genium** — Verify medicine & food via phone photo against NAFDAC Greenbook + crowd batch intelligence + multilingual Gemma 4 explainer. |
-| **Active Build Phase** | **Phase 1: Skeletons, Backend Core & Frontend Shell**                                                                                    |
+| **Active Build Phase** | **Phase 1: Skeletons, Backend Core & Frontend Shell**                                                                                     |
 | **Backend Runtime**    | **NestJS 11** (TypeScript, Express platform, Node.js) in `backend/`                                                                       |
 | **Frontend Runtime**   | **Next.js 16** (App Router, React 19, Tailwind CSS v4, Lucide) in `app/`                                                                  |
-| **ML / AI Service**    | Gemma 4 Vision (extraction), Gemma 4 Multilingual (explainer: EN, YO, HA, IG, PCM), Gemma 4 Parser & Dataset Expander (JSONL) in `ml/`   |
-| **Package Manager**    | `pnpm` (Note: requires `pnpm approve-builds` for native deps like `@parcel/watcher` in `backend/`)                                      |
-| **Database**           | SQLite (dev) / Managed PostgreSQL (DigitalOcean with persistent disk)                                                                    |
+| **ML / AI Service**    | Gemma 4 Vision (extraction), Gemma 4 Multilingual (explainer: EN, YO, HA, IG, PCM), Gemma 4 Parser & Dataset Expander (JSONL) in `ml/`    |
+| **Package Manager**    | `pnpm` (Note: requires `pnpm approve-builds` for native deps like `@parcel/watcher` in `backend/`)                                        |
+| **Database**           | SQLite (dev) / Managed PostgreSQL (DigitalOcean with persistent disk)                                                                     |
 | **Hosting Target**     | DigitalOcean (Droplet or App Platform with persistent volume)                                                                             |
-| **Current Blocker**    | None. Backend & Frontend initialized; resolving git synchronization.                                                                     |
+| **Current Blocker**    | None. Backend & Frontend initialized; resolving git synchronization.                                                                      |
 
 ### Monorepo Project Layout
 
@@ -158,34 +159,40 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 ## 4. Architectural Decision Records (ADRs)
 
 ### ADR-001: Backend Framework Selection (NestJS 11)
+
 - **Date**: 2026-10-16
 - **Decision**: NestJS 11 with TypeScript over plain Express or FastAPI in `backend/`.
 - **Context**: The team needed modular architecture, typed dependency injection, robust DTO/class-validator validation, and clean structure for multi-step pipelines (scan validation, Gemma calls, registry checks, batch risk engine).
 - **Consequences**: Structured modules (`scan/`, `report/`, `registry/`, `batches/`, `dataset/`), fast cold starts, strong typing.
 
 ### ADR-002: Frontend Framework Selection (Next.js 16 in `app/`)
+
 - **Date**: 2026-10-16
 - **Decision**: Next.js 16 with React 19 and Tailwind CSS v4 in `app/`.
 - **Context**: High-performance UI rendering, split-view desktop dashboard + mobile-first scanner, fast local dev with Turbopack.
 - **Consequences**: Frontend code is strictly encapsulated in `app/`, keeping the root clean for monorepo docs and tooling.
 
 ### ADR-003: Package Manager & Native Dependency Resolution
+
 - **Date**: 2026-10-16
 - **Decision**: pnpm with approved build scripts.
 - **Context**: `nest new backend` exited with a script execution block due to pnpm v11's security model for native dependencies (`@parcel/watcher`).
 - **Resolution**: Ran `pnpm approve-builds --all` in `backend/`. Build and lockfile verified cleanly.
 
 ### ADR-004: All-Language Explanations in Single Scan Payload
+
 - **Date**: 2026-10-16
 - **Decision**: Include `explanations` map with all 5 languages (`en`, `yo`, `ha`, `ig`, `pcm`) alongside the active `explanation` string in `POST /api/scan`.
 - **Rationale**: Enables zero-latency, offline-capable language switching in the UI without triggering a second LLM inference call or waiting for network round-trips.
 
 ### ADR-005: State Field on Reports for Real-Time Hotspot Mapping
+
 - **Date**: 2026-10-16
 - **Decision**: Make `state` an explicit (optional) field on `POST /api/report`.
 - **Rationale**: Powers the `GET /api/hotspots` dashboard query directly without needing expensive geolocation reverse-geocoding on free text.
 
 ### ADR-006: Deterministic Fallback & Crash Prevention Policy
+
 - **Date**: 2026-10-16
 - **Decision**: Never allow a Gemma API timeout or JSON parsing error to crash an endpoint or return a 500 error.
 - **Rationale**: For demo & production stability, any LLM timeout (12s limit) or schema invalidity triggers a canned fallback:
@@ -193,6 +200,7 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   - Report parser failure -> fallback to `anomaly_type: "OTHER"`.
 
 ### ADR-007: Multi-Agent Continuity & State Logging
+
 - **Date**: 2026-10-16
 - **Decision**: Maintain `docs/LOGS.md` with updated system state, concrete ADRs, and session logs, paired with `AGENTS.md` instructions.
 - **Rationale**: Avoids merge conflicts, re-asking foundational questions, and token burn across multiple agents and teammates.
@@ -202,6 +210,7 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 ## 5. Chronological Session Logs
 
 ### [Session 0] — 2026-10-16: Backend Setup & Workspace Alignment
+
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
   1. Reviewed `docs/ABOUT.md`, `docs/PLAN.md`, and `BACKEND_PLAN.md`.
@@ -215,11 +224,14 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 - **Current State**: Backend environment healthy, dependencies installed and built, ready for module scaffolding and endpoint implementation.
 
 ### [Session 1] — 2026-10-16: Frontend Architecture & Monorepo Cohesion
+
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
   1. Audited repository structure: Next.js 16 in `app/`, NestJS 11 in `backend/`, scraper in `ml/`.
   2. Verified Next.js 16 + React 19 + Tailwind v4 setup in `app/`.
+
 ### [Session 2] — 2026-10-16: Prisma 7.0 & SQLite Verification Database
+
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
   1. Installed Prisma `7.10.0`, `@prisma/client`, and `@prisma/adapter-better-sqlite3`.
@@ -231,6 +243,7 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 - **Current State**: SQLite database active, fully populated with 11,135 official products, ready for backend NestJS endpoints.
 
 ### [Session 3] — 2026-10-16: ML Vision Extractor v1 & Test Suite Verification
+
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
   1. Built [ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py) implementing packaging OCR extraction prompt v1 with calibrated per-field confidence scoring (`reg_no`, `product_name`, `manufacturer`, `batch_no`, `expiry`).
@@ -242,6 +255,7 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 - **Current State**: Vision extraction engine v1 operational, tested, and contract handoff artifact ready for backend integration.
 
 ### [Session 4] — 2026-10-16: Google AI Studio Integration, Packaging Cross-Check & E2E Pipeline
+
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
   1. Configured Google AI Studio (`GEMINI_API_KEY`) and upgraded the computer vision extraction engine ([ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py)) to `google-genai` with `gemini-2.5-flash` in native JSON mode with sub-6s latency.
@@ -251,7 +265,8 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   5. Completed and checked off Hour 1:30–2:45 deliverables in [ml/checklist.md](file:///c:/Users/USER/Documents/GitHub/genium/ml/checklist.md).
 - **Current State**: Computer vision extraction and carton vs. blister packaging comparison engines are fully operational and verified end-to-end against the live NAFDAC SQLite database.
 
-### [Session 4] — 2026-10-16: FastAPI ML Vision Service Microservice (`ml/main.py`)
+### [Session 4b] — 2026-10-16: FastAPI ML Vision Service Microservice (`ml/main.py`)
+
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
   1. Configured FastAPI microservice in `ml/main.py` exposing `POST /extract` and `GET /health`.
@@ -260,19 +275,39 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   4. Verified healthcheck and error handling using Starlette TestClient (returns HTTP 200 with calibrated schema even on degraded input).
 - **Current State**: `ml/main.py` active and ready to be called over HTTP by the NestJS backend `ScanService`.
 
-### [Session 5] — 2026-10-16: Frontend Hero UI, Live Camera Box & Gradient ASCII Background Fix
+### [Session 5] — 2026-10-16: Barcode Scanning, QR Code & Redirected Link Resolution Engine
+
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
-  1. **Perplexity/Kraft-inspired Hero Box**: Implemented dedicated medicine packaging verification box strictly for **Live Camera** and **File Attachments** (no text input box). Built [`LiveCameraBox.tsx`](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/components/scanner/LiveCameraBox.tsx) with live in-browser webcam feed, HUD reticle, laser line animation, and snapshot canvas.
-  2. **Modular Scanner HUD**: Extracted [`VerificationHUD.tsx`](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/components/scanner/VerificationHUD.tsx) for 3-tier verdict cards, decrypted metadata fields, collision alerts, and 5-language tabs (`EN`, `YO`, `HA`, `IG`, `PCM`).
-  3. **Diagnosed & Fixed Blank Gradient ASCII Background**:
-     - *Alpha Premultiplication*: WebGL context was using `alpha: true` and clamping `color.rgb` to fractional `color.a`, causing the browser compositor to blend pixels as transparent black into the background. Changed to opaque background with `outColor.a = 1.0` and `alpha: false`.
-     - *Atlas Texture Incompleteness*: Fixed non-power-of-two mipmap generation issue in `buildAtlas` by using standard `gl.RGBA` format with `gl.LINEAR` filtering, removing invalid mipmap calls that caused glyphs to sample as transparent (0, 0, 0, 0).
-     - *Shader Sampling*: Direct sampling of font atlas (`texture(uAtlas, atlasUv).a`) with bold glyph weight (`600`) and cyan/emerald luminescent highlight.
-     - *Removed Suffocating Mask*: Softened the `page.tsx` overlay from an 80% black blackout mask (`from-black/60 via-black/45 to-black/80`) to a gentle edge vignette (`from-black/40 via-transparent to-black/70 pointer-events-none`) so the radiant ASCII matrix beam shines through across the 100vh Navbar + Hero viewport.
-     - *Continuous Render Loop*: Removed loop stall conditions so shimmering ASCII characters animate continuously at 60fps and respond to pointer move/burst events.
-  4. Verified production build with `pnpm build` (exited 0, TypeScript cleanly compiled).
-- **Current State**: Frontend 100vh Navbar + Hero features a vibrant, interactive, and high-performance React Bits `GradientASCII` background behind the live camera scanner and hero HUD.
+  1. Built [ml/barcode_resolver.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/barcode_resolver.py) using `zxing-cpp` to detect 1D barcodes (EAN-13, UPC, Code 128) and 2D codes (QR, DataMatrix, GS1 Digital Link) directly from packaging photos.
+  2. Implemented GS1 Digital Link parser extracting Application Identifiers: GTIN `(01)`, Batch `(10)`, Expiry `(17)`, and Serial `(21)`.
+  3. Built automated HTTP redirect follower (`resolve_url`): traces URL redirect chains safely, extracts destination HTML/JSON payloads, and uses Google AI Studio (`gemini-2.5-flash`) to parse structured regulatory details (`product_name`, `manufacturer`, `batch_no`, `verification_status`).
+  4. Integrated `BarcodeResolver` directly into [ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py) and [ml/main.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/main.py): single scan now simultaneously extracts packaging OCR and decodes & resolves barcode verification links.
+  5. Verified end-to-end with [ml/test_integrated_barcode_scan.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/test_integrated_barcode_scan.py): scanned composite medicine pack with QR code, followed redirect chain, and extracted structured drug verification details.
+- **Current State**: Vision model enhanced with dual-track verification: printed packaging OCR + barcode/QR digital link resolution.
+
+### [Session 6] — 2026-10-16: ScanModule Implementation with Clean DTO Architecture
+
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Built NestJS `ScanModule` (`src/scan/`) connecting `POST /api/scan` directly to the FastAPI ML vision microservice (`POST /extract`).
+  2. Separated all contracts and data shapes into dedicated DTO files: `src/scan/dto/scan-response.dto.ts` and `src/scan/dto/scan-request.dto.ts`.
+  3. Integrated deterministic Greenbook database checks against Prisma `Product` (11,135 registered medicines/foods), expiry date parsing, batch record lookups, and carton vs blister cross-verification.
+  4. Implemented 3-tier verdict system (`green`, `amber`, `red`) detecting cloned/fraudulent registrations.
+  5. Implemented full 5-language explanation mapping (`en`, `yo`, `ha`, `ig`, `pcm`) for zero-latency UI toggles.
+  6. Verified compilation cleanly with `pnpm run build` (0 errors).
+- **Current State**: `ScanModule` fully operational, cleanly typed with DTOs, and ready for integration.
+
+### [Session 5] — 2026-10-16: Barcode Scanning, QR Code & Redirected Link Resolution Engine
+
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Built [ml/barcode_resolver.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/barcode_resolver.py) using `zxing-cpp` to detect 1D barcodes (EAN-13, UPC, Code 128) and 2D codes (QR, DataMatrix, GS1 Digital Link) directly from packaging photos.
+  2. Implemented GS1 Digital Link parser extracting Application Identifiers: GTIN `(01)`, Batch `(10)`, Expiry `(17)`, and Serial `(21)`.
+  3. Built automated HTTP redirect follower (`resolve_url`): traces URL redirect chains safely, extracts destination HTML/JSON payloads, and uses Google AI Studio (`gemini-2.5-flash`) to parse structured regulatory details (`product_name`, `manufacturer`, `batch_no`, `verification_status`).
+  4. Integrated `BarcodeResolver` directly into [ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py) and [ml/main.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/main.py): single scan now simultaneously extracts packaging OCR and decodes & resolves barcode verification links.
+  5. Verified end-to-end with [ml/test_integrated_barcode_scan.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/test_integrated_barcode_scan.py): scanned composite medicine pack with QR code, followed redirect chain, and extracted structured drug verification details.
+- **Current State**: Vision model enhanced with dual-track verification: printed packaging OCR + barcode/QR digital link resolution.
 
 ---
 
@@ -288,18 +323,17 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 ## 7. Active Task Board & Immediate Next Steps
 
 ### Backend Tasks (`backend/`)
+
 - [x] Set up database service (Prisma 7.0 / Better-SQLite3) with the 5 core tables and seed 11,135 NAFDAC products.
-- [ ] Create NestJS Modules:
-  - `HealthModule` (`/api/health`)
-  - `ScanModule` (`/api/scan`)
-  - `ReportModule` (`/api/report`)
-  - `BatchesModule` (`/api/hotspots`)
-  - `DatasetModule` (`/api/dataset`, `/api/dataset/export`)
+- [x] Create NestJS `ScanModule` (`/api/scan`) with dedicated DTOs and ML extraction integration.
+- [ ] Create remaining endpoints only upon explicit user instruction.
+
 - [ ] Enable CORS for frontend development (`localhost:3000`, `localhost:5173`) and production URLs.
 - [ ] Set up global API prefix (`/api`).
 - [ ] Implement contract-shaped mock responses for all 5 endpoints so frontend development can unblock immediately.
 
 ### Frontend Tasks (`app/`)
+
 - [ ] Curate NAFDAC Greenbook snapshot (`app/data/greenbook_snapshot.json`) with 50 high-frequency Nigerian medicines & foods.
 - [ ] Build split-view layout: Mobile scanner simulator (left) + Live Risk & Hotspot Dashboard (right).
 - [ ] Connect language selector (`en`, `yo`, `ha`, `ig`, `pcm`) to toggle multi-language verdict display instantly.

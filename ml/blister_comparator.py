@@ -62,11 +62,16 @@ class BlisterComparator:
     def __init__(
         self,
         api_key: Optional[str] = None,
+        fallback_api_key: Optional[str] = None,
         model: Optional[str] = None
     ):
-        self.api_key = api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        primary_key = api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        fallback_key = fallback_api_key or os.getenv("GOOGLE_FALLBACK_API_KEY") or os.getenv("GEMINI_FALLBACK_API_KEY")
+
+        self.api_keys = [k for k in [primary_key, fallback_key] if k]
         self.model = model or os.getenv("GOOGLE_VISION_MODEL", "gemini-2.5-flash")
-        self.client = genai.Client(api_key=self.api_key)
+        self.clients = [genai.Client(api_key=k) for k in self.api_keys]
+        self.client = self.clients[0] if self.clients else None
 
     def _prepare_image(self, image_input: Union[str, Image.Image, bytes]) -> Image.Image:
         """Loads and prepares PIL Image."""
@@ -119,33 +124,45 @@ class BlisterComparator:
             else:
                 contents.append("Cross-examine the medicine packaging surfaces shown in this image for batch, date, and pill consistency.")
 
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.0
-                )
-            )
+            for client_idx, client in enumerate(self.clients):
+                try:
+                    response = client.models.generate_content(
+                        model=self.model,
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            temperature=0.0
+                        )
+                    )
 
-            raw_text = response.text.strip()
-            parsed = json.loads(raw_text)
+                    raw_text = response.text.strip()
+                    parsed = json.loads(raw_text)
 
-            pass_val = parsed.get("pass")
-            if pass_val not in (True, False, None):
-                if isinstance(pass_val, str):
-                    pass_val = True if pass_val.lower() == "true" else (False if pass_val.lower() == "false" else None)
-                else:
-                    pass_val = None
+                    pass_val = parsed.get("pass")
+                    if pass_val not in (True, False, None):
+                        if isinstance(pass_val, str):
+                            pass_val = True if pass_val.lower() == "true" else (False if pass_val.lower() == "false" else None)
+                        else:
+                            pass_val = None
 
-            return {
-                "id": "carton_vs_blister",
-                "pass": pass_val,
-                "detail": str(parsed.get("detail", "Carton vs blister packaging check complete.")).strip(),
-                "confidence": round(float(parsed.get("confidence", 0.90)), 2),
-                "carton_details": parsed.get("carton_details", {}),
-                "blister_details": parsed.get("blister_details", {})
-            }
+                    return {
+                        "id": "carton_vs_blister",
+                        "pass": pass_val,
+                        "detail": str(parsed.get("detail", "Carton vs blister packaging check complete.")).strip(),
+                        "confidence": round(float(parsed.get("confidence", 0.90)), 2),
+                        "carton_details": parsed.get("carton_details", {}),
+                        "blister_details": parsed.get("blister_details", {})
+                    }
+
+                except Exception as e:
+                    if client_idx < len(self.clients) - 1:
+                        print(f"[BlisterComparator] Primary API key error ({type(e).__name__}). Retrying with fallback API key...")
+                        continue
+                    else:
+                        print(f"[BlisterComparator] All API keys exhausted. Error: {e}")
+                        return fallback_null
+
+            return fallback_null
 
         except Exception as e:
             print(f"[BlisterComparator] Execution error: {e}")
