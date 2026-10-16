@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as crypto from 'crypto';
 
@@ -16,7 +16,8 @@ export class ScanService {
   private readonly logger = new Logger(ScanService.name);
   private readonly mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+
 
   async processScan(
     cartonImage: Express.Multer.File,
@@ -322,7 +323,7 @@ export class ScanService {
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12-second budget
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second budget
 
       const response = await fetch(`${this.mlServiceUrl}/extract`, {
         method: 'POST',
@@ -337,6 +338,7 @@ export class ScanService {
       }
 
       const data = await response.json();
+      this.logger.log(`ML Service response: ${JSON.stringify(data)}`);
       return {
         extracted: data.extracted || this.emptyExtraction(),
         blister_extracted: data.blister_extracted || null,

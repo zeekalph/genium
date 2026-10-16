@@ -46,7 +46,7 @@ def health_check():
     return {
         "status": "healthy",
         "model": extractor.model,
-        "api_configured": bool(extractor.api_key),
+        "api_configured": bool(getattr(extractor, "api_key", None) or getattr(extractor, "api_keys", None)),
     }
 
 
