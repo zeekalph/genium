@@ -1,0 +1,27 @@
+{
+  "status": "success",
+  "model": "meta/llama-3.2-11b-vision-instruct",
+  "schema_version": "1.0",
+  "extracted": {
+    "reg_no": {
+      "value": "A4-100137",
+      "confidence": 1.0
+    },
+    "product_name": {
+      "value": "Augmentin 625mg",
+      "confidence": 1.0
+    },
+    "manufacturer": {
+      "value": "GlaxoSmithKline Pharmaceuticals",
+      "confidence": 1.0
+    },
+    "batch_no": {
+      "value": "B24091",
+      "confidence": 1.0
+    },
+    "expiry": {
+      "value": "2027-08",
+      "confidence": 1.0
+    }
+  }
+}

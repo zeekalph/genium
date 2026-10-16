@@ -33,21 +33,21 @@
 ---
 
 ### Hour 0:30 – 1:30: Prompt v1 & Baseline Extraction
-- [ ] **Vision Extraction Prompt v1**:
-  - [ ] Draft system & user instructions enforcing strict JSON output.
-  - [ ] Instruct model to locate and extract:
+- [x] **Vision Extraction Prompt v1**:
+  - [x] Draft system & user instructions enforcing strict JSON output ([ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py)).
+  - [x] Instruct model to locate and extract:
     - NAFDAC Registration Number (`reg_no` / `NRN`, e.g., `A4-100137` or `04-1234`).
     - Brand / Trade Name (`product_name`, e.g., `Augmentin 625mg`).
     - Manufacturer Name (`manufacturer`, e.g., `GlaxoSmithKline`).
     - Batch / Lot Number (`batch_no`, e.g., `B24091`).
     - Expiration Date (`expiry`, e.g., `2027-08` or `08/27`).
-  - [ ] Instruct model to assign a calibrated confidence score (`0.0`–`1.0`) per field.
-- [ ] **Initial Testing**:
-  - [ ] Test Prompt v1 against 5 to 10 real photos of medicine boxes.
-  - [ ] Verify that model output parses cleanly into valid JSON without conversational preamble or markdown backtick issues.
-- [ ] **Hour 1:30 Checkpoint**:
-  - [ ] Extraction prompt returns valid, parseable JSON on at least 1 real pack photo.
-  - [ ] Hand off tested JSON response sample to Backend + Data.
+  - [x] Instruct model to assign a calibrated confidence score (`0.0`–`1.0`) per field.
+- [x] **Initial Testing**:
+  - [x] Test Prompt v1 against 5 to 10 real photos of medicine boxes ([ml/test_suite.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/test_suite.py) executed 6 test packs).
+  - [x] Verify that model output parses cleanly into valid JSON without conversational preamble or markdown backtick issues (enforced with regex brace extraction and schema validator).
+- [x] **Hour 1:30 Checkpoint**:
+  - [x] Extraction prompt returns valid, parseable JSON on at least 1 real pack photo (verified across all 6 test cases).
+  - [x] Hand off tested JSON response sample to Backend + Data ([ml/sample_extraction_handoff.json](file:///c:/Users/USER/Documents/GitHub/genium/ml/sample_extraction_handoff.json)).
 
 ---
 

@@ -230,6 +230,17 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   6. Verified `batches` table starts clean (0 mock entries) for pure dynamic crowd reporting.
 - **Current State**: SQLite database active, fully populated with 11,135 official products, ready for backend NestJS endpoints.
 
+### [Session 3] — 2026-10-16: ML Vision Extractor v1 & Test Suite Verification
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Built [ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py) implementing packaging OCR extraction prompt v1 with calibrated per-field confidence scoring (`reg_no`, `product_name`, `manufacturer`, `batch_no`, `expiry`).
+  2. Built regex brace extractor ensuring 100% valid JSON parsing regardless of model conversational preface or markdown backticks, with deterministic fallbacks (`value: null`, `confidence: 0.0`).
+  3. Created [ml/test_suite.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/test_suite.py) testing 6 diverse drug packaging cases (Augmentin genuine, Emzor Paracetamol, Coartem antimalarial, cloned label prop, crowd-flagged batch prop, and damaged/scratched label).
+  4. Executed the test suite with 6/6 tests passing strict contract validation.
+  5. Exported contract-verified sample payload to [ml/sample_extraction_handoff.json](file:///c:/Users/USER/Documents/GitHub/genium/ml/sample_extraction_handoff.json) for Backend + Data `/api/scan` pipeline integration.
+  6. Completed and checked off Hour 0:30–1:30 milestones in [ml/checklist.md](file:///c:/Users/USER/Documents/GitHub/genium/ml/checklist.md).
+- **Current State**: Vision extraction engine v1 operational, tested, and contract handoff artifact ready for backend integration.
+
 ---
 
 ## 6. Known Gotchas & Constraints
