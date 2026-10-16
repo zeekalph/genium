@@ -364,7 +364,16 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   3. Configured `metadata.icons` in [layout.tsx](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/layout.tsx) for crisp favicon display across all desktop browsers, Safari, and mobile bookmarks.
   4. Updated [Navbar.tsx](file:///c:/Users/PC/Desktop/Coding/Genium/app/app/components/Navbar.tsx) to use the new simple logo mark (`Image` from `next/image` with glowing status badge and React Bits Magnet) and removed the text wordmark as requested.
   5. Verified Next.js 16 build (`pnpm build`) passed with code 0 (generating static metadata routes for `/icon.png` and `/apple-icon.png`).
-- **Current State**: Genium displays the standalone logo mark in the Navbar and tab favicon across devices.
+### [Session 12] — 2026-10-16: Comprehensive Project Documentation (README) Generation
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Authored exhaustive, well-structured documentation in [README.md](file:///c:/Users/PC/Desktop/Coding/Genium/README.md) and [Readme.me](file:///c:/Users/PC/Desktop/Coding/Genium/Readme.me).
+  2. Adhered strictly to stylistic constraints: eliminated all emojis and em dashes across the entire document.
+  3. Detailed the complete product rationale: cloned NAFDAC registration vulnerability, MAS scratch code coverage gaps, and crowd batch kill-switch dynamics.
+  4. Outlined the monorepo architecture across frontend (`app/`), backend (`backend/`), and computer vision microservice (`ml/`).
+  5. Documented the 3-Tier Verdict model (Green, Amber, Red), complete REST API specifications with JSON schemas (`/api/scan`, `/api/report`, `/api/hotspots`, `/api/dataset/export`), anomaly reporting taxonomy, and batch risk scoring formula.
+  6. Provided complete local development setup procedures, Docker deployment guides, and safety/medical boundaries.
+- **Current State**: Full architecture, implementation, and deployment documentation is present in repository root.
 
 ---
 
