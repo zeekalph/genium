@@ -24,13 +24,18 @@ class BarcodeResolver:
     def __init__(
         self,
         api_key: Optional[str] = None,
+        fallback_api_key: Optional[str] = None,
         model: Optional[str] = None,
         timeout: int = 8
     ):
-        self.api_key = api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        primary_key = api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        fallback_key = fallback_api_key or os.getenv("GOOGLE_FALLBACK_API_KEY") or os.getenv("GEMINI_FALLBACK_API_KEY")
+
+        self.api_keys = [k for k in [primary_key, fallback_key] if k]
         self.model = model or os.getenv("GOOGLE_VISION_MODEL", "gemini-2.5-flash")
         self.timeout = timeout
-        self.client = genai.Client(api_key=self.api_key) if self.api_key else None
+        self.clients = [genai.Client(api_key=k) for k in self.api_keys]
+        self.client = self.clients[0] if self.clients else None
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": (
@@ -207,19 +212,25 @@ class BarcodeResolver:
             '  "summary": "1-sentence summary of what the destination page confirms"\n'
             "}"
         )
-        try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.0
+        for client_idx, client in enumerate(self.clients):
+            try:
+                response = client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        temperature=0.0
+                    )
                 )
-            )
-            return json.loads(response.text.strip())
-        except Exception as e:
-            print(f"[BarcodeResolver] Web content extraction error: {e}")
-            return None
+                return json.loads(response.text.strip())
+            except Exception as e:
+                if client_idx < len(self.clients) - 1:
+                    print(f"[BarcodeResolver] Primary API key error ({type(e).__name__}). Retrying with fallback API key...")
+                    continue
+                else:
+                    print(f"[BarcodeResolver] Web content extraction error: {e}")
+                    return None
+        return None
 
     def scan_and_resolve(self, image_input: Union[str, Image.Image]) -> Dict[str, Any]:
         """
