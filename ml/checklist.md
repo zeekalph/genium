@@ -52,22 +52,22 @@
 ---
 
 ### Hour 1:30 – 2:45: Edge Case Tuning & Blister Comparison
-- [ ] **Extraction Resilience & Prompt Tuning**:
-  - [ ] Test failure cases from the Product/Demo team (glare, angled perspectives, curved surfaces, small print, low-light).
-  - [ ] Tune prompt to handle partial occlusions or ambiguous characters (e.g., distinguishing `0` vs `O`, `B` vs `8`).
-  - [ ] Calibrate confidence values against frontend thresholds:
+- [x] **Extraction Resilience & Prompt Tuning**:
+  - [x] Test failure cases from `/ml/images` (glare, angled perspectives, curved surfaces, small print, low-light; tested against `spec1.jpg` through `spec6.jpg`).
+  - [x] Tune prompt to handle partial occlusions or ambiguous characters (e.g., distinguishing `0` vs `O`, `B` vs `8`, zero-hallucination guardrail, and packaging surface-awareness).
+  - [x] Calibrate confidence values against frontend thresholds:
     - 🟢 Green: `> 0.90` (high confidence)
     - 🟡 Amber: `0.70 – 0.90` (medium confidence)
     - 🔴 Red: `< 0.70` (low confidence / unreadable)
-- [ ] **Carton vs. Blister Comparison Prompt**:
-  - [ ] Design comparison prompt accepting 2 inputs: carton image + blister pack strip image (or side-by-side photo).
-  - [ ] Instruct model to compare:
+- [x] **Carton vs. Blister Comparison Prompt**:
+  - [x] Design comparison prompt accepting 2 inputs (carton image + blister pack strip, or combined dual-pack photo like `spec3.jpg`/`spec4.jpg`) in [ml/blister_comparator.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/blister_comparator.py).
+  - [x] Instruct model to compare:
     - Does blister `batch_no` match carton `batch_no`?
     - Does blister `expiry` match carton `expiry`?
     - Does blister tablet/capsule visual description match expected product format?
-  - [ ] Output standardized check verdict: `carton_vs_blister: { pass: boolean | null, detail: string }`.
-- [ ] **Hour 2:45 Checkpoint**:
-  - [ ] End-to-end scan pipeline verified with live vision extraction feeding deterministic registry lookup.
+  - [x] Output standardized check verdict: `carton_vs_blister: { id: "carton_vs_blister", pass: boolean | null, detail: string, confidence: float }`.
+- [x] **Hour 2:45 Checkpoint**:
+  - [x] End-to-end scan pipeline verified with live vision extraction feeding deterministic registry lookup ([ml/e2e_scan_pipeline.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/e2e_scan_pipeline.py) querying `backend/dev.db` products table to confirm matches/mismatches).
 
 ---
 

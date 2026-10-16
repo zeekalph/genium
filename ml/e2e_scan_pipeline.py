@@ -20,8 +20,8 @@ DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend
 class EndToEndScanPipeline:
     def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path
-        self.extractor = VisionExtractor(timeout=45)
-        self.comparator = BlisterComparator(timeout=60)
+        self.extractor = VisionExtractor()
+        self.comparator = BlisterComparator()
         self._verify_db()
 
     def _verify_db(self):
