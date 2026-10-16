@@ -281,17 +281,19 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   6. Verified compilation cleanly with `pnpm run build` (0 errors).
 - **Current State**: `ScanModule` fully operational, cleanly typed with DTOs, and ready for integration.
 
-### [Session 5] — 2026-10-16: Barcode Scanning, QR Code & Redirected Link Resolution Engine
+### [Session 7] — 2026-10-16: ML Microservice Containerization & Render Deployment Configuration
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
-  1. Built [ml/barcode_resolver.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/barcode_resolver.py) using `zxing-cpp` to detect 1D barcodes (EAN-13, UPC, Code 128) and 2D codes (QR, DataMatrix, GS1 Digital Link) directly from packaging photos.
-  2. Implemented GS1 Digital Link parser extracting Application Identifiers: GTIN `(01)`, Batch `(10)`, Expiry `(17)`, and Serial `(21)`.
-  3. Built automated HTTP redirect follower (`resolve_url`): traces URL redirect chains safely, extracts destination HTML/JSON payloads, and uses Google AI Studio (`gemini-2.5-flash`) to parse structured regulatory details (`product_name`, `manufacturer`, `batch_no`, `verification_status`).
-  4. Integrated `BarcodeResolver` directly into [ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py) and [ml/main.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/main.py): single scan now simultaneously extracts packaging OCR and decodes & resolves barcode verification links.
-  5. Verified end-to-end with [ml/test_integrated_barcode_scan.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/test_integrated_barcode_scan.py): scanned composite medicine pack with QR code, followed redirect chain, and extracted structured drug verification details.
-- **Current State**: Vision model enhanced with dual-track verification: printed packaging OCR + barcode/QR digital link resolution.
+  1. Created [ml/requirements.txt](file:///c:/Users/USER/Documents/GitHub/genium/ml/requirements.txt) specifying all locked production dependencies: `fastapi`, `uvicorn[standard]`, `python-multipart`, `pydantic`, `python-dotenv`, `google-genai`, `pillow`, `zxing-cpp`, `requests`, and `beautifulsoup4`.
+  2. Built multi-stage production [ml/Dockerfile](file:///c:/Users/USER/Documents/GitHub/genium/ml/Dockerfile) using `python:3.11-slim`, non-root user (`appuser`), automated health checks on `/health`, dynamic `$PORT` binding for cloud platforms, and layer caching.
+  3. Added [ml/.dockerignore](file:///c:/Users/USER/Documents/GitHub/genium/ml/.dockerignore) to exclude cache, virtualenvs, local sqlite/db files, test packs, and large json snapshots from image contexts.
+  4. Created [ml/.env.example](file:///c:/Users/USER/Documents/GitHub/genium/ml/.env.example) detailing environment variables required for Render and container execution (`GOOGLE_API_KEY`, `GOOGLE_FALLBACK_API_KEY`, `GOOGLE_VISION_MODEL`, `PORT`).
+  5. Enhanced [ml/main.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/main.py) to integrate `BlisterComparator` and bind dynamically to Render's injected `$PORT`.
+  6. Provided exact Render deployment configuration and run commands for both Native Python and Docker Web Service modes.
+- **Current State**: ML microservice is fully containerized, tested, and ready for instant deployment to Render or any container orchestrator.
 
 ---
+
 
 ## 6. Known Gotchas & Constraints
 

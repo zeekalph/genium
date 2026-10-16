@@ -11,6 +11,7 @@ import uvicorn
 load_dotenv()
 
 from vision_extractor import VisionExtractor
+from blister_comparator import BlisterComparator
 
 app = FastAPI(
     title="Genium ML Vision Service",
@@ -27,8 +28,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize VisionExtractor instance
+# Initialize engines
 extractor = VisionExtractor()
+comparator = BlisterComparator()
 
 
 @app.get("/")
@@ -59,6 +61,7 @@ async def extract_packaging(
     """
     Extracts NAFDAC registration number, product name, manufacturer, batch number,
     and expiry date from uploaded drug/food packaging photos.
+    Optionally cross-examines carton vs blister if blister image is provided.
     """
     primary_file = image or file
     if not primary_file:
@@ -80,12 +83,22 @@ async def extract_packaging(
         # Run vision extraction on carton/primary image
         extracted = extractor.extract_from_image(image_bytes)
 
-        # If blister photo is also supplied, extract fields from blister as well
+        # If blister photo is also supplied, extract fields from blister and run cross-check
         blister_extracted = None
+        carton_vs_blister = None
         if blister:
             blister_bytes = await blister.read()
             if blister_bytes:
                 blister_extracted = extractor.extract_from_image(blister_bytes)
+                try:
+                    carton_vs_blister = comparator.compare(image_bytes, blister_bytes)
+                except Exception as comp_err:
+                    carton_vs_blister = {
+                        "id": "carton_vs_blister",
+                        "pass": None,
+                        "detail": f"Comparison error: {str(comp_err)}",
+                        "confidence": 0.0,
+                    }
 
         elapsed_ms = int((time.time() - start_time) * 1000)
 
@@ -93,6 +106,7 @@ async def extract_packaging(
             "success": True,
             "extracted": extracted,
             "blister_extracted": blister_extracted,
+            "carton_vs_blister": carton_vs_blister,
             "latency_ms": elapsed_ms,
         }
 
@@ -112,10 +126,13 @@ async def extract_packaging(
                 "barcode": {"detected": False, "barcodes": [], "link_resolution": None},
             },
             "blister_extracted": None,
+            "carton_vs_blister": None,
             "latency_ms": elapsed_ms,
         }
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("ML_PORT", "8000"))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    port = int(os.getenv("PORT", os.getenv("ML_PORT", "8000")))
+    reload = os.getenv("ENV", "development").lower() == "development"
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=reload)
+

@@ -72,10 +72,10 @@
 ---
 
 ### Hour 2:45 – 3:30: Final Polish & Handoff
-- [ ] **Finalize Carton vs. Blister Check**:
-  - [ ] Hand over finalized carton + blister prompt to Backend team for integration into `/api/scan`.
-- [ ] **Edge Case Hardening**:
-  - [ ] Ensure prompt explicitly instructs the model to return `null` rather than hallucinating when a field is absent.
+- [x] **Finalize Carton vs. Blister Check**:
+  - [x] Hand over finalized carton + blister prompt to Backend team for integration into `/api/scan` (integrated directly into `ml/main.py` `/extract` and consumed by NestJS `ScanService`).
+- [x] **Edge Case Hardening**:
+  - [x] Ensure prompt explicitly instructs the model to return `null` rather than hallucinating when a field is absent (enforced via prompt zero-hallucination directive and code sanitizer converting missing indicators to `value: null, confidence: 0.0`).
 - [ ] **Stretch Goal (Optional / If Ahead of Schedule)**:
   - [ ] Prepare comparison metrics: "Base Gemma vs. Prompt-Tuned Gemma" demonstrating improved extraction accuracy.
 
