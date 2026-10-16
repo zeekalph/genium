@@ -298,6 +298,17 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   6. Verified compilation cleanly with `pnpm run build` (0 errors).
 - **Current State**: `ScanModule` fully operational, cleanly typed with DTOs, and ready for integration.
 
+### [Session 7] — 2026-10-16: ML Microservice Containerization & Render Deployment Configuration
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Created [ml/requirements.txt](file:///c:/Users/USER/Documents/GitHub/genium/ml/requirements.txt) specifying all locked production dependencies: `fastapi`, `uvicorn[standard]`, `python-multipart`, `pydantic`, `python-dotenv`, `google-genai`, `pillow`, `zxing-cpp`, `requests`, and `beautifulsoup4`.
+  2. Built multi-stage production [ml/Dockerfile](file:///c:/Users/USER/Documents/GitHub/genium/ml/Dockerfile) using `python:3.11-slim`, non-root user (`appuser`), automated health checks on `/health`, dynamic `$PORT` binding for cloud platforms, and layer caching.
+  3. Added [ml/.dockerignore](file:///c:/Users/USER/Documents/GitHub/genium/ml/.dockerignore) to exclude cache, virtualenvs, local sqlite/db files, test packs, and large json snapshots from image contexts.
+  4. Created [ml/.env.example](file:///c:/Users/USER/Documents/GitHub/genium/ml/.env.example) detailing environment variables required for Render and container execution (`GOOGLE_API_KEY`, `GOOGLE_FALLBACK_API_KEY`, `GOOGLE_VISION_MODEL`, `PORT`).
+  5. Enhanced [ml/main.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/main.py) to integrate `BlisterComparator` and bind dynamically to Render's injected `$PORT`.
+  6. Provided exact Render deployment configuration and run commands for both Native Python and Docker Web Service modes.
+- **Current State**: ML microservice is fully containerized, tested, and ready for instant deployment to Render or any container orchestrator.
+
 ### [Session 7] — 2026-10-16: MicroSlats Background Integration (React Bits + ogl)
 - **Engineer / Agent**: Team & Antigravity AI
 - **What Was Done**:
@@ -307,7 +318,9 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
   4. Verified full compilation with `pnpm build` (exited 0 with static optimization in 513ms).
 - **Current State**: 100vh Hero viewport runs the interactive, high-performance `MicroSlats` fluid wave simulation background.
 
+
 ---
+
 
 ## 6. Known Gotchas & Constraints
 
