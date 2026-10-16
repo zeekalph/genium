@@ -1,4 +1,4 @@
-# Genium: 4-Hour Build Plan
+# Genium: 4-Hour Build Plan (updated ownership)
 
 We have 5 hours. We build for 4, and the last hour is buffer, rehearsal, and fixing whatever breaks. Everyone builds in the stack they're comfortable with. Edit owners, times, and tasks freely, this is a living doc.
 
@@ -10,12 +10,14 @@ We have 5 hours. We build for 4, and the last hour is buffer, rehearsal, and fix
 
 ## Roles (swap names as needed)
 
-| Role           | Owner   | Stack                                                          |
-| -------------- | ------- | -------------------------------------------------------------- |
-| Frontend       | Nebulaz | Next.js / React, Tailwind, Framer Motion, shadcn/ui            |
-| Backend        | \_\_\_  | Next.js API routes (or FastAPI), SQLite/Postgres, DigitalOcean |
-| ML / Data      | \_\_\_  | Gemma 4 prompts, JSON schemas, Greenbook snapshot              |
-| Product / Demo | \_\_\_  | Props, script, pitch, QA                                       |
+| Role               | Owner   | Owns                                                                                                                                                  |
+| ------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend           | Nebulaz | Next.js / React, Tailwind, Framer Motion, shadcn/ui. All UI.                                                                                          |
+| Backend + Data     | \_\_\_  | API, DB, deploy (DigitalOcean). **Greenbook snapshot, NAFDAC lookups, datasets, explainer / report-parser / dataset-expander prompts, language checks.** |
+| ML (vision)        | \_\_\_  | Gemma 4 vision: label extraction prompt, carton vs blister comparison, other computer-vision work                                                     |
+| Product / Demo     | \_\_\_  | Props, script, pitch, QA, floater (tests and helps, but does not own data work)                                                                       |
+
+**What changed from the earlier version:** everything about the registry, NAFDAC, datasets, and the text prompts (explainer, parser, expander) moved from ML to Backend + Data. ML keeps vision only. The only ML-to-Backend handoff is the extraction JSON shape.
 
 ---
 
@@ -56,14 +58,25 @@ Response:
   ],
   "verdict": "red",
   "explanation": "Text in the selected language",
+  "explanations": {
+    "en": "...",
+    "yo": "...",
+    "ha": "...",
+    "ig": "...",
+    "pcm": "..."
+  },
   "next_step": "Show this pack to a pharmacist or report to NAFDAC",
   "batch_risk": { "batch_no": "B24091", "reports": 0, "score": 0.1 }
 }
 ```
 
+_(added: `explanations`, so switching language is instant with no extra call)_
+
 ### `POST /api/report`
 
-Request: `{ "text": "free text in any language", "batch_no": "B24091 (optional)", "product_hint": "optional" }`
+Request: `{ "text": "free text in any language", "batch_no": "B24091 (optional)", "product_hint": "optional", "state": "Ogun (optional)" }`
+
+_(added: `state`, so `/api/hotspots` has something to group by)_
 
 Response:
 
@@ -107,8 +120,9 @@ Downloads `genium_dataset.jsonl`.
 - [ ] Agree on the API contract above (paste into the team chat)
 - [ ] Create repo, add everyone, set up branches or agree to commit to `main` carefully
 - [ ] Get Gemma 4 access working (API key or DO), test one hello-world call
-- [ ] DigitalOcean credits confirmed, backend dev creates the droplet or app
+- [ ] DigitalOcean credits confirmed, Backend + Data creates the droplet or app
 - [ ] Decide the language list: EN, Yoruba, Hausa, Igbo, Pidgin
+- [ ] **ML and Backend + Data lock the extraction JSON** (field names plus per-field confidence). This is the only handoff between them.
 
 ### Hour 0:30 to 1:30, Skeletons
 
@@ -120,25 +134,30 @@ Downloads `genium_dataset.jsonl`.
 - [ ] Language switcher component (EN / YO / HA / IG / PCM)
 - [ ] Camera/upload dropzone with a "carton + blister" instruction overlay
 
-**Backend**
+**Backend + Data**
 
-- [ ] Deploy a "hello" endpoint to DigitalOcean (live URL shared with the team by 1:00)
-- [ ] DB tables: `products`, `scans`, `reports`, `batches`
+- [ ] Deploy a "hello" endpoint to DigitalOcean (live URL shared with the team by 1:00). Check the disk persists across deploys, or use a droplet / managed Postgres
+- [ ] DB tables: `products`, `scans`, `reports`, `batches`, `dataset_rows`
 - [ ] Stub all 5 endpoints returning contract-shaped mock data
+- [ ] Upload guards: file type, size limit, request timeouts
+- [ ] **Greenbook snapshot, demo packs first.** For each pack the team will physically hold, look it up in the Greenbook and record the fields exactly as printed
+- [ ] Then widen toward 50 products (Coartem, Amatem, Augmentin, Emzor Paracetamol, Postinor-2, Amalar, Peak Milk, Indomie, Milo, Eva Water, etc.). Row format: reg no, name, manufacturer, category, strength/form, status, MAS required, `source`, `retrieved_at`
+- [ ] Food has no bulk registry, only a per-number lookup, so food rows are manual
+- [ ] Use a one-time snapshot, no hammering NAFDAC's site, and note the source in the README
 
-**ML / Data**
+**ML (vision)**
 
-- [ ] Draft `greenbook_snapshot.json` with 50 products: reg no, name, manufacturer, category, physical description, MAS required (Coartem, Amatem, Augmentin, Emzor Paracetamol, Postinor-2, Amalar, Peak Milk, Indomie, Milo, Eva Water, etc.)
 - [ ] Vision extraction prompt v1 with strict JSON output and per-field confidence
 - [ ] Test on 5 to 10 real photos of packs
+- [ ] Share the JSON shape with Backend + Data (see Hour 0)
 
 **Product / Demo**
 
-- [ ] Collect real packs (at least 2 genuine ones)
+- [ ] Collect real packs (at least 2 genuine ones) and tell Backend + Data which ones, so they go into the registry first
 - [ ] Make the props: a cloned-label box (a real pack with another product's NAFDAC number stuck on)
 - [ ] Draft the demo script and timing
 
-**Checkpoint at 1:30:** the deployed URL responds, the frontend renders mock data, and the vision prompt returns valid JSON on at least one real photo.
+**Checkpoint at 1:30:** the deployed URL responds, the frontend renders mock data, the vision prompt returns valid JSON on at least one real photo, and the demo packs are in the registry.
 
 ### Hour 1:30 to 2:45, Real wiring
 
@@ -149,26 +168,28 @@ Downloads `genium_dataset.jsonl`.
 - [ ] Verdict card (Green/Amber/Red) with a smooth reveal animation
 - [ ] Checks list with pass/fail/unknown icons
 - [ ] Explanation block that updates instantly when the language is switched
-- [ ] "Report a problem" form (text input plus a language hint)
+- [ ] "Report a problem" form (text input, language hint, and a state picker)
 
-**Backend**
+**Backend + Data**
 
-- [ ] Load the Greenbook snapshot into the DB
-- [ ] `/scan`: image to Gemma 4 vision, then deterministic checks, then batch lookup, then the explainer call, then JSON
+- [ ] Load the Greenbook snapshot into the DB (normalize registration numbers on load and on lookup)
+- [ ] `/scan`: image to Gemma 4 vision, then deterministic checks, then batch lookup, then the explainer call, then JSON. Image hash checked first so demo images return from cache
 - [ ] `/report`: text to Gemma parser, store, update batch score
 - [ ] Batch risk rule: 2 or more reports (or 1 pharmacist-tagged) pushes the batch to amber, 3 or more to red
-- [ ] Schema validation on every Gemma response, with a safe fallback so a malformed response never crashes the UI
+- [ ] Schema validation on every Gemma response, 12-second timeout and one retry, with a safe fallback so a malformed response never crashes the UI
+- [ ] **Explainer prompt** with few-shot examples in all 5 languages, one call returning all five (faithful to the findings, no medical advice, never says "fake", says "does not match the registry")
+- [ ] **Report parser prompt** with the anomaly taxonomy: `WRONG_REG_NUMBER`, `DISSOLUTION_OR_TASTE_FAILURE`, `THERAPEUTIC_FAILURE`, `ADVERSE_REACTION`, `PACKAGING_DEFECT`, `MISSING_MAS`, `OTHER`
+- [ ] **Dataset expander prompt**: from each report, produce 3 localized variations as JSONL rows (`instruction`, `input`, `output`, `lang`, `source`). Scan rows come free from the explainer's five languages, so scans need no extra model call. Label generated rows `source: gemma-synthetic`
+- [ ] Get native speakers (or a trusted friend) to sanity check the Yoruba, Hausa, Igbo, and Pidgin outputs, and arrange that early
 
-**ML / Data**
+**ML (vision)**
 
-- [ ] Explainer prompt with few-shot examples in all 5 languages (faithful to the findings, no medical advice, never says "fake", says "does not match the registry")
-- [ ] Report parser prompt with the anomaly taxonomy: `WRONG_REG_NUMBER`, `DISSOLUTION_OR_TASTE_FAILURE`, `THERAPEUTIC_FAILURE`, `ADVERSE_REACTION`, `PACKAGING_DEFECT`, `MISSING_MAS`, `OTHER`
-- [ ] Dataset expander prompt: from each report or scan, produce 3 localized variations as JSONL rows (`instruction`, `input`, `output`, `lang`, `source`)
-- [ ] Get native speakers (or a trusted friend) to sanity check the Yoruba, Hausa, Igbo, and Pidgin outputs
+- [ ] Improve extraction on the failure photos (glare, angles, small print), keep the confidence values meaningful
+- [ ] Prepare the carton + blister comparison prompt (batch, expiry, pill description vs registry)
 
 **Product / Demo**
 
-- [ ] Test every prop against the live scanner, record which photos fail and why
+- [ ] Test every prop against the live scanner, record which photos fail and why, and send the failures to ML
 - [ ] Take backup photos in good lighting (these are your fallback demo images)
 - [ ] Write the pitch opening (the hook is: "products carrying registration numbers that belong to entirely different products")
 
@@ -183,18 +204,22 @@ Downloads `genium_dataset.jsonl`.
 - [ ] Transitions between scan, verdict, and report states (Framer Motion)
 - [ ] Mobile-responsive check on a real phone
 
-**Backend**
+**Backend + Data**
 
-- [ ] `/hotspots` and `/dataset` endpoints live
+- [ ] `/hotspots` (grouped by state, with `updated_at`) and `/dataset` endpoints live
 - [ ] `/dataset/export` downloads `.jsonl`
-- [ ] Response cache for the 3 demo images, so the demo renders in about 1.5s even if Wi-Fi dies
-- [ ] Seed the DB with a few pre-existing reports so the dashboard isn't empty at the start
-
-**ML / Data**
-
-- [ ] Carton + blister comparison prompt (batch, expiry, pill description vs registry)
-- [ ] Tune prompts on failure cases found by the Product person
+- [ ] Response cache for the 3 demo images in all 5 languages, so the demo renders in about 1.5s even if Wi-Fi dies
+- [ ] Seed the DB with a few pre-existing reports so the dashboard isn't empty at the start, with the demo batch starting below red
+- [ ] Reset-demo-state script for rehearsals
+- [ ] Re-check the Yoruba, Hausa, Igbo, and Pidgin text, and pre-write verdict texts for the demo scans as the fallback
+- [ ] Tune the explainer and parser prompts on failure cases found by Product
+- [ ] Wire in the carton-vs-blister check when ML's prompt is ready
 - [ ] Prepare the "base Gemma vs tuned prompt" comparison only if time allows (stretch)
+
+**ML (vision)**
+
+- [ ] Finish and hand over the carton + blister comparison prompt
+- [ ] Tune extraction on remaining failure cases
 
 **Product / Demo**
 
@@ -206,7 +231,8 @@ Downloads `genium_dataset.jsonl`.
 - [ ] **Feature freeze at 3:30.** No new features after this point.
 - [ ] Fix bugs from the dry run, in priority order
 - [ ] Empty states, error states, loading states
-- [ ] Final deploy, confirm the URL works from a phone on mobile data
+- [ ] **Backend + Data:** per-device rate limit on reports, consistent JSON errors with no stack traces, test each failure on purpose (Gemma timeout, malformed JSON, missing registration number, oversized image)
+- [ ] Final deploy, confirm the URL works from a phone on mobile data, keep the last good build as a second deployment or local run script
 - [ ] Take screenshots and record a backup screen capture of the full demo
 - [ ] Write the Devpost/submission text (reuse About.md)
 
@@ -216,6 +242,16 @@ Downloads `genium_dataset.jsonl`.
 - [ ] Assign who speaks, who drives, who handles Q&A
 - [ ] Charge phones, test the projector connection, have the backup video ready
 - [ ] Rest. Do not push risky changes in the last 30 minutes.
+
+---
+
+## If Backend + Data runs short on time, cut in this order
+
+1. Registry entries beyond the demo packs and about 20 products
+2. The async report expander (keep scan-derived dataset rows only)
+3. The carton-vs-blister check
+
+Never cut: demo-pack registry, the scan pipeline, report parsing, batch risk, and the demo cache.
 
 ---
 
