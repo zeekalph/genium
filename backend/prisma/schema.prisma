@@ -1,0 +1,85 @@
+// Prisma schema for Genium Medicine & Food Verification Engine
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Product {
+  regNo            String   @id @map("reg_no")
+  name             String
+  manufacturer     String?
+  category         String?
+  description      String?
+  strength         String?
+  dosageForm       String?  @map("dosage_form")
+  activeIngredient String?  @map("active_ingredient")
+  masRequired      Boolean  @default(false) @map("mas_required")
+  approvalDate     String?  @map("approval_date")
+  expiryDate       String?  @map("expiry_date")
+  status           String?
+  source           String?  // 'greenbook' | 'food'
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([name])
+  @@index([category])
+  @@map("products")
+}
+
+model Scan {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  imageHash String?  @map("image_hash")
+  extracted String   // JSON string
+  checks    String   // JSON string
+  verdict   String   // 'green' | 'amber' | 'red'
+  lang      String   @default("en")
+  latencyMs Int?     @map("latency_ms")
+
+  @@map("scans")
+}
+
+model Report {
+  id             String   @id @default(uuid())
+  text           String
+  parsed         String?  // JSON string
+  batchNo        String?  @map("batch_no")
+  productHint    String?  @map("product_hint")
+  state          String?
+  pharmacistFlag Boolean  @default(false) @map("pharmacist_flag")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([batchNo])
+  @@index([state])
+  @@map("reports")
+}
+
+model Batch {
+  batchNo     String   @id @map("batch_no")
+  productRef  String?  @map("product_ref")
+  reportCount Int      @default(0) @map("report_count")
+  score       Float    @default(0.0)
+  level       String   @default("green") // 'green' | 'amber' | 'red'
+  state       String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([level])
+  @@index([state])
+  @@map("batches")
+}
+
+model DatasetRow {
+  id          String   @id @default(uuid())
+  instruction String
+  input       String
+  output      String
+  lang        String   @default("en")
+  source      String   @default("gemma-synthetic")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("dataset_rows")
+}

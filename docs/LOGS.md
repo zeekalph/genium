@@ -219,8 +219,27 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 - **What Was Done**:
   1. Audited repository structure: Next.js 16 in `app/`, NestJS 11 in `backend/`, scraper in `ml/`.
   2. Verified Next.js 16 + React 19 + Tailwind v4 setup in `app/`.
-  3. Reconciled and merged documentation in `docs/LOGS.md` to reflect unified full-stack architecture.
-- **Current State**: Both `app/` and `backend/` are cleanly configured and aligned with agreed contracts.
+### [Session 2] — 2026-10-16: Prisma 7.0 & SQLite Verification Database
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Installed Prisma `7.10.0`, `@prisma/client`, and `@prisma/adapter-better-sqlite3`.
+  2. Configured Prisma schema with `Product`, `Scan`, `Report`, `Batch`, and `DatasetRow` models.
+  3. Applied schema to SQLite (`backend/dev.db`) using `prisma db push`.
+  4. Created global NestJS `PrismaModule` & `PrismaService` with `PrismaBetterSqlite3` driver adapter.
+  5. Seeded `backend/dev.db` with **11,135 unique verified products** scraped from NAFDAC Greenbook & Food registry.
+  6. Verified `batches` table starts clean (0 mock entries) for pure dynamic crowd reporting.
+- **Current State**: SQLite database active, fully populated with 11,135 official products, ready for backend NestJS endpoints.
+
+### [Session 3] — 2026-10-16: ML Vision Extractor v1 & Test Suite Verification
+- **Engineer / Agent**: Team & Antigravity AI
+- **What Was Done**:
+  1. Built [ml/vision_extractor.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/vision_extractor.py) implementing packaging OCR extraction prompt v1 with calibrated per-field confidence scoring (`reg_no`, `product_name`, `manufacturer`, `batch_no`, `expiry`).
+  2. Built regex brace extractor ensuring 100% valid JSON parsing regardless of model conversational preface or markdown backticks, with deterministic fallbacks (`value: null`, `confidence: 0.0`).
+  3. Created [ml/test_suite.py](file:///c:/Users/USER/Documents/GitHub/genium/ml/test_suite.py) testing 6 diverse drug packaging cases (Augmentin genuine, Emzor Paracetamol, Coartem antimalarial, cloned label prop, crowd-flagged batch prop, and damaged/scratched label).
+  4. Executed the test suite with 6/6 tests passing strict contract validation.
+  5. Exported contract-verified sample payload to [ml/sample_extraction_handoff.json](file:///c:/Users/USER/Documents/GitHub/genium/ml/sample_extraction_handoff.json) for Backend + Data `/api/scan` pipeline integration.
+  6. Completed and checked off Hour 0:30–1:30 milestones in [ml/checklist.md](file:///c:/Users/USER/Documents/GitHub/genium/ml/checklist.md).
+- **Current State**: Vision extraction engine v1 operational, tested, and contract handoff artifact ready for backend integration.
 
 ---
 
@@ -236,6 +255,7 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 ## 7. Active Task Board & Immediate Next Steps
 
 ### Backend Tasks (`backend/`)
+- [x] Set up database service (Prisma 7.0 / Better-SQLite3) with the 5 core tables and seed 11,135 NAFDAC products.
 - [ ] Create NestJS Modules:
   - `HealthModule` (`/api/health`)
   - `ScanModule` (`/api/scan`)
@@ -245,7 +265,6 @@ Frontend builds against mocks/backend; backend implements these exact shapes:
 - [ ] Enable CORS for frontend development (`localhost:3000`, `localhost:5173`) and production URLs.
 - [ ] Set up global API prefix (`/api`).
 - [ ] Implement contract-shaped mock responses for all 5 endpoints so frontend development can unblock immediately.
-- [ ] Set up database service (Prisma / TypeORM / Better-SQLite3) with the 5 core tables.
 
 ### Frontend Tasks (`app/`)
 - [ ] Curate NAFDAC Greenbook snapshot (`app/data/greenbook_snapshot.json`) with 50 high-frequency Nigerian medicines & foods.

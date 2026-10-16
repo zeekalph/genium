@@ -17,10 +17,10 @@
 ## 2. Prime Directive: Check `docs/LOGS.md` First
 
 **Before writing code, proposing architectures, or answering status questions:**
-1. **Always read [docs/LOGS.md](file:///Users/Cridiv/Documents/genium/docs/LOGS.md)**.
+1. **Always read [docs/LOGS.md](file:///c:/Users/USER/Documents/GitHub/genium/docs/LOGS.md)**.
    - It contains the **current state**, **active phase**, **architectural decisions (ADRs)**, **agreed API contracts**, and **immediate next steps**.
 2. **Do not re-ask foundational questions** (e.g. "What framework should we use?", "What is the scan response shape?"). These have already been decided and logged.
-3. **Do not burn unnecessary tokens** re-explaining the problem from scratch. Reference [docs/ABOUT.md](file:///Users/Cridiv/Documents/genium/docs/ABOUT.md) and [docs/PLAN.md](file:///Users/Cridiv/Documents/genium/docs/PLAN.md) when needed.
+3. **Do not burn unnecessary tokens** re-explaining the problem from scratch. Reference [docs/ABOUT.md](file:///c:/Users/USER/Documents/GitHub/genium/docs/ABOUT.md) and [docs/PLAN.md](file:///c:/Users/USER/Documents/GitHub/genium/docs/PLAN.md) when needed.
 
 ---
 
@@ -66,4 +66,4 @@ Whenever you:
 2. Make an architectural decision or change an endpoint contract,
 3. Discover a critical bug, blocker, or gotcha,
 
-**You MUST update [docs/LOGS.md](file:///Users/Cridiv/Documents/genium/docs/LOGS.md)** (specifically the **System Snapshot**, **Decisions Record**, or **Session Log** sections) so future sessions and teammates stay completely aligned.
+**You MUST update [docs/LOGS.md](file:///c:/Users/USER/Documents/GitHub/genium/docs/LOGS.md)** (specifically the **System Snapshot**, **Decisions Record**, or **Session Log** sections) so future sessions and teammates stay completely aligned.
